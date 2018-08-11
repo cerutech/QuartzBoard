@@ -1,8 +1,8 @@
 # Quartz
 Project Quartz. The Next Generation Image Board
 
-# Warning: This project is still in early alpha. There will be bugs. You have been warned.
-### A peak at the development server can be found [here](http://176.26.54.83:8081/)
+#### Warning: This project is still in early alpha. There will be bugs. You have been warned.
+##### A peak at the development server can be found [here](http://176.26.54.83:8081/)
 
 ## Links
 [Trello](https://trello.com/b/RpF7rHwC/project-quartz)

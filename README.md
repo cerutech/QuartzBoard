@@ -19,4 +19,6 @@ Windows:
 ```
 run.bat
 ```
-These files will make sure that your Python install is working and has the proper dependencies installed. 
+These files will make sure that your Python install is working and has the proper dependencies installed. The server will create the database and collections automaticly so that there is no problems with that side. I am currently working on a auto-setup that will allow you to create your admin account but there are currently more pressing problems to solve.
+
+After the server is started, there shouldnt be too many problems with day-to-day use. 

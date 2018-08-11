@@ -19,4 +19,4 @@ Windows:
 ```
 run.bat
 ```
- 
+These files will make sure that your Python install is working and has the proper dependencies installed. 

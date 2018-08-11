@@ -1,0 +1,202 @@
+<head>
+    {% if dark_mode == 'on' %}
+    <link href="/static/css/framework.min.css" rel="stylesheet" />
+    {% else %}
+    <link href="https://jenil.github.io/bulmaswatch/lumen/bulmaswatch.min.css" rel="stylesheet" />
+    {% endif %}
+
+    <link href="https://use.fontawesome.com/releases/v5.0.7/css/all.css" rel="stylesheet" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    {% block head %}
+    {% endblock %}
+</head>
+<body>
+    <style>
+        .no-show {
+            display: none;
+        }
+        .image_container {
+            display: flex;
+            flex-flow: wrap;
+        }
+        .image_container > img {
+            margin: 10px;
+            font-size: 0px;
+            cursor: pointer;
+            height: 200px;
+            width: auto;
+        }
+        html body {
+            width:100%;
+            height:100%;
+        }
+        
+    </style>
+    <script>
+        function open_image(imageID) {
+            window.location = '/image/' + imageID;
+        }
+        function show_notification(notif_text, category) {
+            // reset to normals
+            $('#top_notif').attr('class', 'notification no-show');
+            $('#top_notif').addClass(category);
+            $('#top_notif > .text').text(notif_text);
+            $('#top_notif').toggleClass('no-show');
+
+            setTimeout(function () {
+                $('#top_notif').attr('class', 'notification no-show');
+            }, 4000)
+        }
+        $(document).ready(function () {
+
+            // Check for click events on the navbar burger icon
+            $(".navbar-burger").click(function () {
+
+                // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+                $(".navbar-burger").toggleClass("is-active");
+                $(".navbar-menu").toggleClass("is-active");
+
+            });
+            function search() {
+                var query = $('#search_bar').val().split(" ");
+                console.log(query)
+                var url = '/search?tags=' + query.join('+');
+                window.location = url;
+            }
+            $('#search').click(function () {
+                search();
+            })
+            $('#search_bar').keyup(function (e) {
+                if (e.keyCode == 13) {
+                    search();
+                }
+            });
+        });
+        function add_tag(tag_name) {
+            if ($('#search_bar').val()) {
+                $('#search_bar').val($('#search_bar').val() + ' ' + tag_name)
+            } else {
+                $('#search_bar').val(tag_name)
+            }
+
+        }
+    </script>
+
+    <!-- Nav bar -->
+    {% block nav %}
+    <nav class="navbar is-info is-large is-transparent" style="">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="/">
+                    <img src="/static/logo/logo_white.png" />
+                    <span style="font-size:1.5em;">Quartz</span>
+                </a>
+                <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+
+            <div id="navbarExampleTransparentExample" class="navbar-menu">
+                <div class="navbar-start">
+                    <a class="navbar-item" href="/search">
+                        Search
+                    </a>
+                    <a class="navbar-item" href="/stats">
+                        Stats
+                    </a>
+                </div>
+
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        {% if is_logged_in %}
+                        <div class="field is-grouped">
+                            <p class="control">
+                                <a class="button" href="/profile">{{user.username}}</a>
+                            </p>
+                            <p class="control">
+                                <a class="button" href="/profile/upload">Upload</a>
+                            </p>
+                        </div>
+                        {% else %}
+                        <div class="field is-grouped">
+                            <p class="control">
+                                <a class="button" href="/login">Login</a>
+                            </p>
+                            <p class="control">
+                                <a class="button is-primary" href="/create">
+                                    <span>Sign up</span>
+                                </a>
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+    <div class="columns" style="margin:0 2em;">
+        <div class="column is-3">
+                <div class="field has-addons">
+                    <div class="control">
+                        {% if tags %}
+                        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="{% for tagID in tags %}{% with tag = get_tag(tagID) %}{{tag.name}} {%endwith%}{%endfor%}">
+                        {% else %}
+                        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="">
+                        {% endif %}
+                    </div>
+                    <div class="control">
+                        <a class="button is-info" id="search">
+                            Search
+                        </a>
+                    </div>
+                </div>
+
+            {% block sidebar %}
+            <br />
+            <h1 class="subtitle is-4" style="margin:0;padding:0;">Most popular tags</h1>
+            {% with tags = get_popular_tags(limit=7) %}
+            {% for tag in tags %}
+            {% if not loop.index == 1%}<br />{% endif %}<a onclick="add_tag('{{tag.name}}')">+ {{tag.name}}</a>
+            {% endfor %}
+            {% endwith %}
+            {% endblock %}
+            <br />
+            <br />
+            {% if dark_mode == 'on' %}
+            <a href="/ui_mode?mode=light">Switch to light mode</a>
+            {% else %}
+            <a href="/ui_mode?mode=dark">Switch to dark mode</a>
+            {% endif %}
+        </div>
+        <div class="column">
+
+            <div class="notification no-show" id="top_notif">
+                <span class="text"></span>
+            </div>
+            {% if request.args.get('confirmed') %}
+            <div class="notification is-success">
+                Thank you for confirming your age. 
+            </div>
+            {% endif %}
+            {% if request.args.get('new_user') %}
+            <div class="notification is-success">
+                Welcome to Quartz. If you are new here, please read our <a>quick start guide</a>
+            </div>
+            {% endif %}
+            {% if request.args.get('logged_in') %}
+            <div class="notification is-success">
+                Welcome back, {{user.username}}
+            </div>
+            {% endif %}
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+
+</body>

@@ -1,0 +1,108 @@
+{% extends 'imports.html' %}
+{% block head %}
+
+{% endblock %}
+{% block sidebar %}
+<script>
+    function toggle_tab(tab_name) {
+        $('.tab').removeClass('is-active')
+        var tab = $('.tab[data-tab=' + tab_name + ']');
+        tab.toggleClass('is-active');
+    }
+</script>
+<aside class="menu">
+    <p class="menu-label">
+        General
+    </p>
+    <ul class="menu-list">
+        <li onclick="toggle_tab('dash_main')"><a class="tab is-active" data-tab="dash_main">Dashboard</a></li>
+        <li onclick="toggle_tab('dash_settings')"><a class="tab" data-tab="dash_settings">Settings</a></li>
+    </ul>
+    <p class="menu-label">
+        Management
+    </p>
+    <ul class="menu-list">
+        <li onclick="toggle_tab('dash_images')"><a class="tab" data-tab="dash_images">Images</a></li>
+    </ul>
+</aside>
+{% endblock %}
+{% block content %}
+<style>
+    .tab {
+        display:none;
+    }
+    .tab.is-active {
+        display:block
+    }
+</style>
+<div class="box">
+    <h1 class="title is-4">Hey, {{user.username}}</h1>
+</div>
+<div class="box">
+    <div class="tab is-active" data-tab="dash_main">
+        <div class="columns">
+            <div class="column">
+                <p>This is your dashboard. Here is where you can see your images as well as edit some of the settings</p>
+            </div>
+            <div class="column">
+                <div class="notification is-dark" style="display:flex;justify-content:center;align-items:center;flex-flow:column">
+                    <span style="font-size:3.2em;">{{db.get_author_views(user.userID)}}</span><br /><span style="font-size:1.2em;">Total Views</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab" data-tab="dash_settings">
+        <p>Coming soon!</p>
+    </div>
+    <div class="tab" data-tab="dash_images">
+        <script>
+            function delete_image(fileID) {
+                var url = '/api/image/' + fileID + '/delete';
+                $.ajax({
+                    url: url
+                }).done(function (resp) {
+                    if (resp['success']) {
+                        show_notification(resp['msg'], 'is-success')
+                    } else {
+                        show_notification(resp['msg'], 'is-danger')
+                    }
+
+                })
+            }
+        </script>
+        {% with user_images = get_images(author=g.user['userID']) %}
+        {% if not user_images %}
+        <h1 class="subtitle is-5">Sorry, but you do not have any images uploaded</h1>
+        <a class="button" href="/profile/upload">Upload</a>
+        {% else %}
+        {% for image in user_images %}
+        <div class="notification" style="display:flex;flex-flow:row">
+            <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail" style="max-height:150px;width:auto;max-width:200px;">
+            <div style="margin-left:1em;">
+                <h2 class="title is-4" style="margin:0;">{{image.title}}</h2>
+                <p class="field">
+                    <a class="button is-info">
+                        <span class="icon is-small">
+                            <i class="fa fa-pencil-alt"> </i>
+                        </span>
+                        <span> Edit </span>
+                    </a>
+                    <a class="button is-danger is-outlined" onclick="delete_image('{{image.fileID}}')">
+                        <span> Delete </span>
+                        <span class="icon is-small">
+                            <i class="fa fa-times"> </i>
+                        </span>
+                    </a>
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+    </div>
+    <div class="tab" data-tab="dash_settinsgs">
+        <p>Coming soon!</p>
+    </div>
+</div>
+{% endblock %}

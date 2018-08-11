@@ -1,0 +1,21 @@
+{% extends 'imports.html' %}
+{% block content %}
+<div class="">
+    <div class="box">
+        <h1 class="title">Create a new account</h1>
+        <h2 class="subtitle">Welcome to Quartz</h2>
+        <br />
+
+        <form method="post" enctype="multipart/form-data">
+            <div class="field">
+                <input class="input" placeholder="Username" name="username" />
+            </div>
+            <div class="field">
+                <input class="input" placeholder="Password"  type="password" name="password" />
+            </div>
+            <button class="button is-success">Create!</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

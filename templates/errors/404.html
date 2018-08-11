@@ -1,0 +1,10 @@
+{% extends 'imports.html' %}
+{% block sidebar %}{% endblock %}
+{% block content %}
+<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;">
+    <div class="notification is-danger" style="">
+        <span style="font-size:3em;"><i class="fas fa-exclamation-triangle"></i></span><br />
+        {{error}}
+    </div>
+</div>
+{% endblock %}

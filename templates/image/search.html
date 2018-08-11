@@ -1,0 +1,37 @@
+{% extends 'imports.html' %}
+{% block content %}
+<style>
+    .image_container {
+        display: flex;
+        flex-flow: wrap;
+    }
+
+    .image_container > img {
+        margin: 10px;
+        font-size: 0px;
+        cursor: pointer;
+        max-height: 200px;
+        width: auto;
+    }
+</style>
+<div>
+    {% if broken_tags %}
+    <div class="notification is-danger">
+        The following tags do not exist: {% for tag in broken_tags %}{{tag}}, {% endfor %}
+    </div>
+    {% endif %}
+    <h1 class="title">Search results:</h1>
+    <div class="image_container">
+        {% if results %}
+        {% for image in results %}
+        <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail">
+        {% endfor %}
+        {% else %}
+        <div class="notification is-warning">
+            No results found
+        </div>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

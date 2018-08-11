@@ -1,5 +1,10 @@
 # Quartz
 Project Quartz. The Next Generation Image Board
+
+# Warning: This project is still in early alpha. There will be bugs. You have been warned.
+### A peak at the development server can be found [here](http://176.26.54.83:8081/)
+
+## Links
 [Trello](https://trello.com/b/RpF7rHwC/project-quartz)
 ## What you need
 You need a MongoDB as the server uses this as the database of choice. The server also uses gridFS to store images inside of said database so you need to make sure it is either local or fast and has lots of storage to keep the files in the database. 

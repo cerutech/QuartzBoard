@@ -39,6 +39,9 @@ def login_user():
     if flask.request.method == 'POST':
         data = flask.request.form
         user = db.get_user(data['username'], search_by='username', safe_mode=False)
+        if not user:
+            flask.flash('Username/password is not correct', 'error')
+            return flask.redirect('/login')
 
         if verify_password(data['password'], user['password_hash']):
             resp = flask.make_response(flask.redirect('/?logged_in=1'))

@@ -1,7 +1,9 @@
 import io
+import sys
 import flask
 import secrets
 import threading
+import humanize
 from datetime import datetime
 from PIL import Image
 from server import db
@@ -24,6 +26,8 @@ def process_image(image_bytes, fileID, author=None):
         bio_thumb = io.BytesIO()
         thumb.save(bio_thumb, format='PNG')
         bio_thumb.seek(0)
+        
+        print("img size in memory in bytes: ", humanize.naturalsize(sys.getsizeof(bio)))
 
         db.upload_image(bio, fileID, author=author)
         db.upload_image(bio_thumb, fileID + '_thumb', author=author)
@@ -59,24 +63,7 @@ def upload_image():
         image = flask.request.files['image']
         #if not image_bytes:
         #    return flask.redirect('/profile/upload')
-        tags_used = []
-        for tag in data['tags'].split(','):
-            tag_data = db.db.tags.find_one({'name': tag.replace(' ', '')})
-            if not tag_data:
-                # create a new entry
-                tag_data = {'name': tag.replace(' ', ''),
-                            'tagID': db.make_id(length=18),
-                            'uses': 1,
-                            'searches':0,
-                            'created_by': flask.g.user['userID'],
-                            'created_at': datetime.utcnow()}
-
-                db.db.tags.insert_one(tag_data)
-            else:
-                db.db.tags.update_one({'tagID': tag_data['tagID']},
-                                      {'$set': {'uses': tag_data['uses'] + 1}})
-
-            tags_used.append(tag_data['tagID'])
+        tags_used = [str(x) for x in data['tags'].split(',')]
 
         new_image = {'userID': flask.g.user['userID'],
                      'title': data['title'],

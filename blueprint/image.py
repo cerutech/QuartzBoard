@@ -3,6 +3,7 @@ import flask
 import secrets
 import requests
 import threading
+from datetime import datetime
 from PIL import Image, ImageFont
 from server import db
 import logging
@@ -31,31 +32,21 @@ def search():
     to_search = flask.request.args.get('tags','*')
     tags = []
     broken_tags = []
-    for tag in to_search.split('+'):
+
+    for tag in to_search.split():
         if tag:
-            if ' ' in tag:
-                # ok uh, weird stuff
-                extra_tags = tag.split()
-                for tag in extra_tags:
-                    tag_meta = db.get_tag(tag, search_by='name')
+            #if ':' in tag:
+            #    spec, val = tag.split(':')
+            #    extra_searches[spec] = val
 
-                    if tag_meta:
-                        tags.append(tag_meta.get('tagID'))
-                    else:
-                        broken_tags.append(tag)
-
-                    db.db.tags.update_one({'tagID': tag_meta['tagID']},
-                                          {'$set': {'searches': tag_meta['searches'] + 1}})
-
+            tag_meta = db.get_tag(tag, search_by='name')
+            if tag_meta:
+                tags.append(tag_meta.get('tagID'))
             else:
-                tag_meta = db.get_tag(tag, search_by='name')
-                if tag_meta:
-                    tags.append(tag_meta.get('tagID'))
-                else:
-                    broken_tags.append(tag)
+                broken_tags.append(tag)
 
-                db.db.tags.update_one({'tagID': tag_meta['tagID']},
-                                        {'$set': {'searches': tag_meta['searches'] + 1}})
+            db.db.tags.update_one({'tagID': tag_meta['tagID']},
+                                    {'$set': {'searches': tag_meta['searches'] + 1}})
 
     results = db.get_images(tags=tags,
                             page_number=flask.request.args.get('page', '1'))
@@ -139,3 +130,64 @@ def show_image_thumbnail(fileID):
 
     return flask.send_file(io.BytesIO(file),
                            mimetype='image/png')
+
+
+@image_api.route('/api/tags/check', methods=['POST'])
+def get_tag():
+    data = flask.request.get_json(force=True)
+    # check a tags name
+    tag_meta = db.get_tag(data['tag_name'], search_by='name')
+    if not tag_meta:
+        return flask.jsonify({'success': True,
+                              'needs_adding': True})
+
+    else:
+        del tag_meta['_id']
+        return flask.jsonify({'success': True,
+                              'tag': tag_meta})
+
+
+@image_api.route('/api/tags/create', methods=['POST'])
+def create_tag():
+    data = flask.request.form
+    tag_meta = db.db.tags.find_one({'name': data['tag_name']})
+    print(tag_meta, 'META')
+    if tag_meta:
+        del tag_meta['_id']
+        return flask.jsonify(tag_meta)
+
+    tag_data = {'name': data['tag_name'],
+                'type': data['type'],
+                'tagID': db.make_id(length=18),
+                'uses': 1,
+                'searches':0,
+                'created_by': flask.g.user['userID'],
+                'created_at': datetime.utcnow().timestamp(),
+                'likes':[]}
+
+    if data['type'] == 'character' and data.get('fandom'):
+        tag_data['fandom'] = data['fandom']
+
+    db.db.tags.insert_one(tag_data)
+    del tag_data['_id']
+    print(tag_data, 'METTA2')
+    return flask.jsonify({'success': True,
+                          'tag': tag_data})
+
+@image_api.route('/api/tags/<tagID>/like')
+def like_tag(tagID):
+    db.like_tag(tagID, flask.g.user['userID'])
+
+    return flask.jsonify({'success': True})
+
+@image_api.route('/api/tags/<tagID>/unlike')
+def dislike_tag(tagID):
+    db.unlike_tag(tagID, flask.g.user['userID'])
+
+    return flask.jsonify({'success': True})
+
+@image_api.route('/api/tags/render_tag_list', methods=['POST'])
+def render_tag_list():
+    tags = flask.request.get_json(force=True)
+    return flask.jsonify({'success': True,
+                          'html': flask.render_template('image/utils/render_tag_list.html', **locals())})

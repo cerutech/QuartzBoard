@@ -39,10 +39,10 @@ class RecordObject():
         self._set(**kwargs)
 
     def get(self, key, default=None):
-        if key in self.kwargs:
+        if hasattr(self, key):
             return getattr(self, key, default)
         else:
-            return None
+            return default
         
     def _set(self, **kwargs):
         for k,v in kwargs.items():

@@ -1,18 +1,16 @@
 # Quartz
-Project Quartz. The Next Generation Image Board
+Project Quartz. An all new experience with image boards
 
-#### Warning: This project is still in early alpha. There will be bugs. You have been warned.
+#### Warning: This project is still in alpha. There will be bugs. You have been warned.
 ##### A peak at the development server can be found [here](http://176.26.54.83:8081/)
 
-## Links
-[Trello](https://trello.com/b/RpF7rHwC/project-quartz)
 ## What you need
 You need a MongoDB as the server uses this as the database of choice. The server also uses gridFS to store images inside of said database so you need to make sure it is either local or fast and has lots of storage to keep the files in the database. 
 
 To set up a MongoDB instance you should follow the guide on [their website](https://docs.mongodb.com/manual/installation/).
 
 #### S3 Support?
-If you are feeling like you can afford such a thing, Quartz supports using S3 like CDN's insted of the GridFS system. This feature is still being worked on but it does work with the Digital Ocean Spaces CDN. 
+If you have added S3 login details into your config.json then the server will use this for files larger than 1MB. This is to keep external costs down while also optimising the S3 CDN. The server also works with S3-like CDN's such as Digital Ocean's Spaces. 
 
 ## Running the server
 

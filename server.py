@@ -1,26 +1,16 @@
 import os; os.chdir(os.path.realpath(__file__).replace('server.py',''))
 import flask
 import humanize
-from quartz import *
 import logging
 import  flask_profiler
+from quartz import *
 
-logging.root.handlers = []
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO , filename='ex.log')
-
-# set up logging to console
-console = logging.StreamHandler()
-console.setLevel(logging.ERROR)
-# set a format which is simpler for console use
-formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
-console.setFormatter(formatter)
-logging.getLogger("").addHandler(console)
+logger = logging.getLogger('quartz.main')
 
 app = flask.Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SECRET_KEY'] = db.config.secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
-
 
 app.config["flask_profiler"] = {
     "enabled": db.config.developer_mode,
@@ -30,8 +20,7 @@ app.config["flask_profiler"] = {
     "basicAuth":{
         "enabled": True,
         "username": "admin",
-
-        "password": "password"
+        "password": "superSecurePassword"
     },
     'endpointRoot':'admin_profiler',
     "ignore": [
@@ -42,7 +31,7 @@ app.config["flask_profiler"] = {
 @app.route('/')
 def index():
     images = db.get_images(page_number=1, page_size=5)
-    return flask.render_template('index.html', **locals())
+    return flask.render_template('home.html', **locals())
 
 @app.route('/about')
 def about():
@@ -81,6 +70,7 @@ def utility_processor():
             # user token is invalid
             flask.g.user = {}
             flask.g.is_logged_in = False
+            
         else: 
             flask.g.user = user 
             flask.g.is_logged_in = True
@@ -92,7 +82,7 @@ def utility_processor():
         rule = flask.request.url_rule.rule
     except:
         # 404?
-        return flask.render_template('errors/404.html',error ='Missing page! $300 reward')
+        return flask.render_template('errors/404.html',error= '404'), 404
 
     if 'static' not in rule or 'api' not in rule:
         if not flask.request.cookies.get('confirmed') and ('confirm' not in flask.request.url_rule.rule):
@@ -101,10 +91,10 @@ def utility_processor():
 
 @app.context_processor
 def ctx_processor():
-
     return {'user': flask.g.user,
             'is_logged_in': flask.g.is_logged_in,
-            'dark_mode': flask.request.cookies.get('dark_mode', 'off')}
+            'dark_mode': flask.request.cookies.get('dark_mode', 'off'),
+            'enable_nsfw': flask.request.cookies.get('enable_nsfw', '0')}
 
 if __name__ == '__main__':
     from blueprint.auth import auth_api
@@ -124,8 +114,6 @@ if __name__ == '__main__':
 
     app.jinja_env.globals.update(**template_functions)
 
-    
     flask_profiler.init_app(app)
-
 
     app.run('0.0.0.0', 8081, threaded=True)

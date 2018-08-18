@@ -20,13 +20,13 @@
     {% for image in images %}
     <div style="width:128px;height:128px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin:1em;position:relative">
         {% if not image.nsfw %}
-        <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail" style="width:auto;height:100%;">
+        <img class="image" onclick="window.location = '/image/' + {{image.fileID}}" src="/api/image/{{image.fileID}}/thumbnail" style="width:auto;height:100%;">
         {% else %}
         {% if enable_nsfw == "1" and image.nsfw %}
-        <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail" style="width:auto;height:100%;">
+        <img class="image" onclick="window.location = '/image/' + {{image.fileID}}" src="/api/image/{{image.fileID}}/thumbnail" style="width:auto;height:100%;">
         {% endif %}
         {% if enable_nsfw == "0" and image.nsfw %}
-        <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail?blured=1" style="width:auto;height:100%;">
+        <img class="image" onclick="window.location = '/image/' + {{image.fileID}}" src="/api/image/{{image.fileID}}/thumbnail?blured=1" style="width:auto;height:100%;">
         {% endif %}
         {% endif %}
     </div>

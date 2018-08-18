@@ -116,4 +116,4 @@ if __name__ == '__main__':
 
     flask_profiler.init_app(app)
 
-    app.run('0.0.0.0', 8081, threaded=True)
+    app.run('0.0.0.0', db.config.get('port', 8081), threaded=True)

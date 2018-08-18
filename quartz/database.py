@@ -253,7 +253,13 @@ class DataBase:
         for _ in range(0, word_count):
             output.append(secrets.choice(words).replace('\n','').title())
 
-        return ''.join(output).encode().decode()
+        return self.make_url_safe(''.join(output).encode().decode())
+
+    def make_url_safe(self, string, safe=''):
+        illegal_chars = ["'",";",""]
+        for char in illegal_chars:
+            string = string.replace(char, safe)
+        return string
 
 try:
     db = db

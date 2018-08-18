@@ -10,21 +10,23 @@
         tab.toggleClass('is-active');
     }
 </script>
-<aside class="menu">
-    <p class="menu-label">
-        General
-    </p>
-    <ul class="menu-list">
-        <li onclick="toggle_tab('dash_main')"><a class="tab is-active" data-tab="dash_main">Dashboard</a></li>
-        <li onclick="toggle_tab('dash_settings')"><a class="tab" data-tab="dash_settings">Settings</a></li>
-    </ul>
-    <p class="menu-label">
-        Management
-    </p>
-    <ul class="menu-list">
-        <li onclick="toggle_tab('dash_images')"><a class="tab" data-tab="dash_images">Images</a></li>
-    </ul>
-</aside>
+<div class="column is-2">
+    <aside class="menu">
+        <p class="menu-label">
+            General
+        </p>
+        <ul class="menu-list">
+            <li onclick="toggle_tab('dash_main')"><a class="tab is-active" data-tab="dash_main">Dashboard</a></li>
+            <li onclick="toggle_tab('dash_settings')"><a class="tab" data-tab="dash_settings">Settings</a></li>
+        </ul>
+        <p class="menu-label">
+            Management
+        </p>
+        <ul class="menu-list">
+            <li onclick="toggle_tab('dash_images')"><a class="tab" data-tab="dash_images">Images</a></li>
+        </ul>
+    </aside>
+</div>
 {% endblock %}
 {% block content %}
 <style>
@@ -76,10 +78,12 @@
         <a class="button" href="/profile/upload">Upload</a>
         {% else %}
         {% for image in user_images %}
-        <div class="notification" style="display:flex;flex-flow:row">
+        <div class="" style="display:flex;flex-flow:row">
             <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail" style="max-height:150px;width:auto;max-width:200px;">
             <div style="margin-left:1em;">
                 <h2 class="title is-4" style="margin:0;">{{image.title}}</h2>
+                {{tag_list(image.tags)}}
+                <br />
                 <p class="field">
                     <a class="button is-info">
                         <span class="icon is-small">
@@ -96,6 +100,7 @@
                 </p>
             </div>
         </div>
+        <br />
         {% endfor %}
         {% endif %}
         {% endwith %}

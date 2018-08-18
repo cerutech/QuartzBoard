@@ -1,3 +1,108 @@
+{% macro tag_list(tags, column=False) %}
+<style>
+    .is-columned {
+        display: flex;
+        flex-flow: column;
+    }
+</style>
+    {% for tag in tags %}
+    {% with tag = db.get_tag(tag, search_by="tagID") %}
+    {% if tag %}
+<div class="control {% if column %}is-columned{% endif %}">
+    <div class="tags has-addons" onclick="add_tag('{{tag.name}}')">
+        {% if user %}
+        {% if db.check_tag_like(tag.tagID, user.userID) %}
+        <a class="tag is-success" onclick="unlike_tag('{{tag.tagID}}')">
+            <i class="fas fa-star"></i>
+        </a>
+        {% else %}
+        <a class="tag is-info" onclick="like_tag('{{tag.tagID}}')">
+            <i class="fas fa-thumbs-up"></i>
+        </a>
+        {% endif %}
+        {% endif %}
+        <span class="tag is-dark">{{tag.type}}</span>
+        {% if tag.type == 'fandom' %}
+        <span class="tag is-info">{{tag.name}}</span>
+        {% endif %}
+        {% if tag.type == 'character' %}
+        <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
+        {% endif %}
+        {% if tag.type == 'kink' %}
+        <span class="tag is-warning">{{tag.name}}</span>
+        {% endif %}
+        {% if tag.type == 'author' %}
+        <span class="tag is-success">{{tag.name}}</span>
+        {% endif %}
+    </div>
+</div>
+    {% endif %}
+    {% endwith %}
+    {% endfor %}
+
+{% endmacro %}
+{% macro tag_solo(tag, column=False) %}
+<div class="control {% if column %}is-columned{% endif %}">
+    <div class="tags has-addons" onclick="add_tag('{{tag.name}}')" style="margin-bottom:0px;">
+        {% if user %}
+        {% if db.check_tag_like(tag.tagID, user.userID) %}
+        <a class="tag is-success" onclick="unlike_tag('{{tag.tagID}}')">
+            <i class="fas fa-star"></i>
+        </a>
+        {% else %}
+        <a class="tag is-info" onclick="like_tag('{{tag.tagID}}')">
+            <i class="fas fa-thumbs-up"></i>
+        </a>
+        {% endif %}
+        {% endif %}
+        <span class="tag is-dark">{{tag.type}}</span>
+        {% if tag.type == 'fandom' %}
+        <span class="tag is-info">{{tag.name}}</span>
+        {% endif %}
+        {% if tag.type == 'character' %}
+        <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
+        {% endif %}
+        {% if tag.type == 'kink' %}
+        <span class="tag is-warning">{{tag.name}}</span>
+        {% endif %}
+        {% if tag.type == 'author' %}
+        <span class="tag is-success">{{tag.name}}</span>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+{% macro search_bar(tags) %}
+<div class="field has-addons">
+    <div class="control">
+        {% if tags %}
+        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="{% for tagID in tags %}{% with tag = get_tag(tagID) %}{{tag.name}} {%endwith%}{%endfor%}">
+        {% else %}
+        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="">
+        {% endif %}
+    </div>
+    <div class="control">
+        <a class="button is-info" id="search">
+            Search
+        </a>
+    </div>
+</div>
+<script>
+    function search() {
+        var query = $('#search_bar').val().split(" ");
+        console.log(query)
+        var url = '/search?tags=' + query.join('+');
+        window.location = url;
+    }
+    $('#search').click(function () {
+        search();
+    })
+    $('#search_bar').keyup(function (e) {
+        if (e.keyCode == 13) {
+            search();
+        }
+    });
+</script>
+{% endmacro %}
 <head>
     {% if dark_mode == 'on' %}
     <link href="/static/css/framework.min.css" rel="stylesheet" />
@@ -9,6 +114,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/static/js/cookie_manager.js"></script>
     {% block head %}
     {% endblock %}
 </head>
@@ -17,10 +123,12 @@
         .no-show {
             display: none;
         }
+
         .image_container {
             display: flex;
             flex-flow: wrap;
         }
+
         .image_container > img {
             margin: 10px;
             font-size: 0px;
@@ -28,11 +136,11 @@
             height: 200px;
             width: auto;
         }
+
         html body {
-            width:100%;
-            height:100%;
+            width: 100%;
+            height: 100%;
         }
-        
     </style>
     <script>
         function open_image(imageID) {
@@ -82,6 +190,18 @@
             }
 
         }
+        function toggle_nsfw() {
+            cookie_manager = new CookieManager();
+
+            if (cookie_manager.get('enable_nsfw') == '1') {
+                cookie_manager.set('enable_nsfw', '0', 14);
+                $('.blur_overlay').css('filter', 'blur(5px)');
+            } else {
+                cookie_manager.set('enable_nsfw', '1', 14);
+                $('.blur_overlay').css('filter', '');
+            }
+            
+        }
     </script>
 
     <!-- Nav bar -->
@@ -90,8 +210,8 @@
         <div class="container">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
-                    <img src="/static/logo/logo_white.png" />
-                    <span style="font-size:1.5em;">Quartz</span>
+                    <img src="/static/logo/logo.png" />
+                    <span style="font-size:1.5em;margin-left:5px;">Quartz</span>
                 </a>
                 <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
                     <span></span>
@@ -140,31 +260,19 @@
     </nav>
     {% endblock %}
     <div class="columns" style="margin:0 2em;">
+        {% block sidebar %}
         <div class="column is-3">
-                <div class="field has-addons">
-                    <div class="control">
-                        {% if tags %}
-                        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="{% for tagID in tags %}{% with tag = get_tag(tagID) %}{{tag.name}} {%endwith%}{%endfor%}">
-                        {% else %}
-                        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="">
-                        {% endif %}
-                    </div>
-                    <div class="control">
-                        <a class="button is-info" id="search">
-                            Search
-                        </a>
-                    </div>
-                </div>
-
-            {% block sidebar %}
-            <br />
-            <h1 class="subtitle is-4" style="margin:0;padding:0;">Most popular tags</h1>
+            {{search_bar(tags)}}
+            <hr />
+            <h1 class="subtitle is-4" style="">Most popular tags</h1>
             {% with tags = get_popular_tags(limit=7) %}
             {% for tag in tags %}
-            {% if not loop.index == 1%}<br />{% endif %}<a onclick="add_tag('{{tag.name}}')">+ {{tag.name}}</a>
+            {% if tag %}
+            {{tag_solo(tag, column=True)}}
+            {% endif %} 
             {% endfor %}
             {% endwith %}
-            {% endblock %}
+
             <br />
             <br />
             {% if dark_mode == 'on' %}
@@ -172,7 +280,9 @@
             {% else %}
             <a href="/ui_mode?mode=dark">Switch to dark mode</a>
             {% endif %}
+            <hr />
         </div>
+        {% endblock %}
         <div class="column">
 
             <div class="notification no-show" id="top_notif">
@@ -180,7 +290,7 @@
             </div>
             {% if request.args.get('confirmed') %}
             <div class="notification is-success">
-                Thank you for confirming your age. 
+                Thank you for confirming your age.
             </div>
             {% endif %}
             {% if request.args.get('new_user') %}

@@ -26,12 +26,17 @@ def process_image(image_bytes, fileID, author=None):
         bio_thumb = io.BytesIO()
         thumb.save(bio_thumb, format='PNG')
         bio_thumb.seek(0)
-        
-        print("img size in memory in bytes: ", humanize.naturalsize(sys.getsizeof(bio)))
+        size = sys.getsizeof(bio)
+        print("img size in memory in bytes: ", size)
+        if size > (1 * 1024 * 1024): # 1MB
+            location = 'S3'
+        else:
+            location = 'gridFS'
 
-        db.upload_image(bio, fileID, author=author)
-        db.upload_image(bio_thumb, fileID + '_thumb', author=author)
-        db.db.images.update_one({'fileID': fileID}, {'$set': {'processing': False}})
+        db.upload_image(bio, fileID, author=author, location=location)
+        db.upload_image(bio_thumb, fileID + '_thumb', author=author, location=location)
+        db.db.images.update_one({'fileID': fileID}, {'$set': {'processing': False,
+                                                              'location': location}})
 
     finally:
         # incase of error
@@ -56,6 +61,8 @@ def upload_image():
 
     if flask.request.method == 'POST':
         data = flask.request.form
+        if data['terms'] != 'on':
+            return flask.redirect('/profile/upload?terms=0')
 
         #fileID = db.make_token(length=32)
         fileID = db.make_word_token(word_count=4)
@@ -64,7 +71,7 @@ def upload_image():
         #if not image_bytes:
         #    return flask.redirect('/profile/upload')
         tags_used = [str(x) for x in data['tags'].split(',')]
-
+        print(data, 'New image')
         new_image = {'userID': flask.g.user['userID'],
                      'title': data['title'],
                      'filename': secure_filename(image.filename),
@@ -73,12 +80,11 @@ def upload_image():
                      'fileID': fileID,
                      'views': [],
                      'status': 'public',
+                     'nsfw': True if data['is_nsfw'] == "on" else False,
                      'processing': True}
 
         db.db.images.insert_one(new_image)
-        author = None
-        if not db.config.use_gridfs:
-            author = flask.g.user['userID']
+        author = flask.g.user['userID']
 
         process_image(image.stream, fileID, author=author)
         #threading.Thread(None, target=process_image, args=(image.stream, fileID, )).start()

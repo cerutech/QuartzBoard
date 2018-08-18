@@ -44,9 +44,9 @@ def search():
                 tags.append(tag_meta.get('tagID'))
             else:
                 broken_tags.append(tag)
-
-            db.db.tags.update_one({'tagID': tag_meta['tagID']},
-                                    {'$set': {'searches': tag_meta['searches'] + 1}})
+            if tag_meta:
+                db.db.tags.update_one({'tagID': tag_meta['tagID']},
+                                        {'$set': {'searches': tag_meta['searches'] + 1}})
 
     results = db.get_images(tags=tags,
                             page_number=flask.request.args.get('page', '1'))
@@ -92,7 +92,7 @@ def get_image(fileID):
     if not image_meta:
         return flask.redirect('/static/image/404.jpg')
 
-    if db.config.use_gridfs:
+    if image_meta.get('location', 'gridFS') == 'gridFS':
         try:
             file = db.get_image(fileID)
         except AttributeError:
@@ -118,13 +118,15 @@ def get_image(fileID):
 @image_api.route('/api/image/<fileID>/thumbnail')
 def show_image_thumbnail(fileID):
     image_meta = db.db.images.find_one({'fileID': fileID})
-    if db.config.use_gridfs:
+
+    if image_meta.get('location', 'gridFS') == 'gridFS':
 
         try:
             file = db.get_image(fileID + '_thumb')
         except AttributeError:
             # file is missing
             db.db.images.remove({'fileID': fileID})
+            file = generate_error_image(404)
     else:
         return flask.redirect(db.base_url + str(image_meta['userID']) + '/' + fileID + '_thumb' + '.png')
 
@@ -134,7 +136,8 @@ def show_image_thumbnail(fileID):
 
 @image_api.route('/api/tags/check', methods=['POST'])
 def get_tag():
-    data = flask.request.get_json(force=True)
+    data = flask.request.form
+    print(data)
     # check a tags name
     tag_meta = db.get_tag(data['tag_name'], search_by='name')
     if not tag_meta:
@@ -188,6 +191,7 @@ def dislike_tag(tagID):
 
 @image_api.route('/api/tags/render_tag_list', methods=['POST'])
 def render_tag_list():
-    tags = flask.request.get_json(force=True)
+    tags = flask.request.get_json()
+    tags = [x for x in tags if x is not None]
     return flask.jsonify({'success': True,
                           'html': flask.render_template('image/utils/render_tag_list.html', **locals())})

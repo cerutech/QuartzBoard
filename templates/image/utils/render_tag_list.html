@@ -1,0 +1,23 @@
+<div class="field is-grouped is-grouped-multiline">
+    {% for tag in tags %}
+    
+    <div class="control">
+        <div class="tags has-addons">
+            <span class="tag is-dark">{{tag.type}}</span>
+            {% if tag.type == 'fandom' %}
+            <span class="tag is-info">{{tag.name}}</span>
+            {% endif %}
+            {% if tag.type == 'character' %}
+            <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
+            {% endif %}
+            {% if tag.type == 'kink' %}
+            <span class="tag is-warning">{{tag.name}}</span>
+            {% endif %}
+            {% if tag.type == 'author' %}
+            <span class="tag is-success">{{tag.name}}</span>
+            {% endif %}
+            <a class="tag is-delete" onclick="remove_tag('{{tag.tagID}}')"></a>
+        </div>
+    </div>
+    {% endfor %}
+</div>

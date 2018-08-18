@@ -5,58 +5,54 @@
 
 {% endblock %}
 {% block sidebar %}
-<script>
-    function add_tag(tag_name) {
-        if ($('#search_bar').val()) {
-            $('#search_bar').val($('#search_bar').val() + ' ' + tag_name)
-        } else {
-            $('#search_bar').val(tag_name)
+<div class="column is-3">
+    {{search_bar()}}
+    <h1 class="subtitle is-5" style="margin:0;padding:0;">Tags</h1>
+    <br />
+    <script>
+        function like_tag(tagID) {
+            $.ajax({ url: '/api/tags/' + tagID + '/like' }).done(function (resp) {
+                if (resp['success']) {
+                    show_notification('You have liked this tag', 'is-success');
+                } else {
+                    show_notification(resp['msg'], 'is-success');
+                }
+            })
         }
-        
-    }
-    function toggle_width() {
-        if (window._width == 'smol') {
-            window._width = 'big';
-            $('#img').css('height', '100%')
+        function unlike_tag(tagID) {
+            $.ajax({ url: '/api/tags/' + tagID + '/unlike' }).done(function (resp) {
+                if (resp['success']) {
+                    show_notification('You have unliked this tag', 'is-success');
+                } else {
+                    show_notification(resp['msg'], 'is-success');
+                }
+            })
+        }
+    </script>
 
-        }
-        else {
-            window._width = 'smol';
-            $('#img').css('max-height', '750px')
-        }
-    }
-    window._width = 'smol'
-</script>
-<h1 class="subtitle is-4" style="margin:0;padding:0;">Tags</h1>
-{% for tag in image_meta.tags %}
-{% with tag = db.get_tag(tag) %}
-{% if not loop.index == 1%}<br />{% endif %}<a onclick="add_tag('{{tag.name}}')">+ {{tag.name}}</a>
-{% endwith %}
-{% endfor %}
+    <div style="display:flex;flex-flow:column">
+        {{ tag_list(image_meta.tags, column=True) }}
+    </div>
+    <hr />
+    <h1 class="subtitle is-5">Info</h1>
+    {% with author = db.get_user(image_meta.userID) %}
+    <a href="/profile/{{author.userID}}"><b>Uploaded by: {{author.username}}</b></a>
+    {% endwith %}
+    <p><b>Uploaded: {{image_meta.uploaded_at}}</b></p>
+    <p><b>Views: {{image_meta.views|length}}</b></p>
+    <hr />
+</div>
 
 {% endblock %}
 {% block content %}
 {% with author = get_user(image_meta['userID']) %}
+<div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
+    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="height:100%;width:100%;max-width:825px;" />
+</div>
+<hr />
 <div class="box">
-    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="max-height:750px;" />
-    <div class="columns">
-        <div class="column">
-            <h1 class="title" style="margin-top:10px;">{{image_meta.title}}</h1>
-            <h2 class="subtitle">Uploaded by {{author.username}}</h2>
-            <h4 class="subtitle is-5">{{db.get_image_views(image_meta.fileID)}} Views</h4>
-        </div>
-        <div class="column">
-
-        </div>
-    </div>
-    <p>
-        Tags:
-        {% for tagID in image_meta.tags %}
-        {% with tag = get_tag(tagID) %}
-        <a href="/search?tags={{tag['name']}}">{{tag['name']}}</a>,
-        {% endwith %}
-        {% endfor%}
-    </p>
+    <h1 class="subtitle">Comments</h1>
+    <p>Coming soon</p>
 </div>
 {% endwith %}
 {% endblock %}

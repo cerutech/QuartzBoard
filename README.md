@@ -1,5 +1,7 @@
-# Quartz
-Project Quartz. An all new experience with image boards
+<h1 align="center">
+Quartz
+</h1> 
+<p align="center">The next generation image booru</p>
 
 #### Warning: This project is still in alpha. There will be bugs. You have been warned.
 ##### A peak at the development server can be found [here](http://176.26.54.83:8081/)

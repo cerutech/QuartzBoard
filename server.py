@@ -72,7 +72,11 @@ def utility_processor():
             flask.g.is_logged_in = False
             
         else: 
-            flask.g.user = user 
+            flask.g.user = user
+            if db.config.get('ownerID', '0') == str(user['userID']):
+                flask.g.user['role'] = ROLES['admin']
+            else:
+                flask.g.user['role'] = ROLES[user.get('role', 'user')]
             flask.g.is_logged_in = True
             is_logged_in = True
     else:
@@ -84,7 +88,9 @@ def utility_processor():
         # 404?
         return flask.render_template('errors/404.html',error= '404'), 404
 
-    if 'static' not in rule or 'api' not in rule:
+    if 'static' in rule or 'api' in rule or 'image' in rule:
+        pass
+    else:
         if not flask.request.cookies.get('confirmed') and ('confirm' not in flask.request.url_rule.rule):
             return flask.redirect('/confirm')
 

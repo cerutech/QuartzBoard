@@ -1,8 +1,10 @@
 {% extends 'imports.html' %}
 {% block head %}
-<meta property="og:title" content="{{image_meta.title}}" />
-<meta property="twitter:image" content="/api/image/{{image_meta.fileID}}" />
-
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@Quartz_" />
+<meta name="twitter:title" content="{{image_meta.title or 'Quartz Image'}}" />
+<meta name="twitter:description" content="{{db.get_tags_string(image_meta.tags)}}" />
+<meta name="twitter:image" content="/api/image/{{image_meta.fileID}}" />
 {% endblock %}
 {% block sidebar %}
 <div class="column is-3">
@@ -41,6 +43,11 @@
     <p><b>Uploaded: {{image_meta.uploaded_at}}</b></p>
     <p><b>Views: {{image_meta.views|length}}</b></p>
     <hr />
+    {% if is_logged_in %}
+    {% if user.role.has("delete_image") %}
+    <a href="/api/image/{{image_meta.fileID}}/delete">Delete image</a>
+    {% endif %}
+    {% endif %}
 </div>
 
 {% endblock %}

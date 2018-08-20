@@ -22,6 +22,55 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
+class Permissions():
+    def __init__(self, **kwargs):
+        """
+        Some explaining: 
+        All permissions start with a prefix. This is either:
+        create_, edit_, delete_
+        These are sub-permissions of the general:
+        craete, edit, delete
+
+        IF YOU GIVE A ROLE ANY OF THE ABOVE PERMISSIONS THEN
+        THE ROLE WILL HAVE FULL PERMISSIONS TO DO ANY OF THOSE ACTIONS
+        For instance, if a role has edit=True then they have full permissions to edit 
+        tags, images etc..
+        """
+
+        defaults = {'create_image': True, # upload
+                    'delete_image':False,
+                    'delete_own_image':True,
+                    'edit_post': False,
+                    'edit_own_post': True,
+                    'create_tags': True, # allows for the controlling of new tags in the database
+                    # forces already made tags to be used
+                    'edit_own_tags': True,
+                    'edit_user_permissions': False,
+                    
+                    'edit_site_settings': False, # gives access to /admin/settings
+                    }
+
+        for k, v in kwargs.items():
+            defaults[k] = v
+
+        self.permissions = defaults
+
+    def has(self, perm_name):
+        if not perm_name in self.permissions:
+            raise TypeError('Permission "{}" does not exist'.format(perm_name))
+
+        prefix = perm_name.split('_')[0]
+
+        if self.permissions.get(prefix, False):
+            return True # return true if the role has edit, create or delete set
+
+        return self.permissions[perm_name]
+
+
+ROLES = {'admin': Permissions(edit=True,
+                              create=True,
+                              delete=True),
+         'user': Permissions(edit=True)}
 
 
 try:
@@ -212,6 +261,15 @@ class DataBase:
         else:
             return self.db.tags.find_one({search_by: tag})
         
+    def get_tags_string(self, tag_list):
+        output = []
+        for tagID in tag_list:
+            tag = self.get_tag(tagID)
+
+            output.append('{} ({})'.format(tag['name'],tag['type']))
+
+        return ', '.join(output)
+
     def like_tag(self, tagID, userID):
         like_mash = hashlib.sha224(str(userID).encode()).hexdigest()
         tag_meta = self.get_tag(tagID)
@@ -260,6 +318,10 @@ class DataBase:
         for char in illegal_chars:
             string = string.replace(char, safe)
         return string
+
+    # permissions
+    def get_role(self, role_name):
+        return ROLES[role_name]
 
 try:
     db = db

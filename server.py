@@ -76,7 +76,7 @@ def utility_processor():
             if db.config.get('ownerID', '0') == str(user['userID']):
                 flask.g.user['role'] = db.get_role('admin')
             else:
-                flask.g.user['role'] = db.get_role(user['roleID'])
+                flask.g.user['role'] = db.get_role(user.get('roleID'))
 
             flask.g.is_logged_in = True
             is_logged_in = True

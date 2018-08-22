@@ -1,0 +1,87 @@
+{% extends 'imports.html' %}
+{% block sidebar %}
+<div class="column is-3">
+    <aside class="menu">
+        <p class="menu-label">
+            Manage
+        </p>
+        <ul class="menu-list">
+            <li><a href="/admin/roles">Roles</a></li>
+            <li><a href="/admin/roles/give" class="is-active">Give roles</a></li>
+        </ul>
+        <p class="menu-label">
+            Your roles
+        </p>
+        <ul class="menu-list">
+            {% for role in db.db.roles.find() %}
+            <li><a href="/admin/roles/{{role.roleID}}">{{role.name}}</a></li>
+            {% endfor %}
+            <li onclick="$('#new_role').slideToggle()"><a>+ New</a></li>
+        </ul>
+    </aside>
+    <div id="new_role" style="display:none;">
+        <hr />
+        <div class="">
+            <form action="/api/admin/roles/create" method="post" enctype="multipart/form-data">
+                <div class="field has-addons">
+                    <div class="control">
+                        <input class="input" name="name" type="text" placeholder="Role name" required>
+                    </div>
+                    <div class="control">
+                        <button class="button is-info">
+                            Create
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="box">
+    <script>
+        function load_user_list() {
+            var search = $('#username').val();
+            $.ajax({
+                url: '/api/admin/roles/user_list?q=' + search,
+                method: 'POST'
+            }).done(function (data) {
+                if (data['success']) {
+                    $('#userlist_holder').html(data['html']);
+                }
+            })
+        }
+        function set_role(userID) {
+            var roleID = $('#role_' + userID).val();
+            console.log(roleID);
+            $.ajax({
+                url: '/api/admin/roles/' + roleID + '/give/' + userID,
+                method: 'POST',
+                data: roleID
+            }).done(function (data) {
+                if (data['success']) {
+                    show_notification('Added role to user', 'is-success');
+                } else {
+                    show_notification(data['msg'], 'is-error');
+                }
+            })
+        }
+    </script>
+    <h1 class="title">Give Role</h1>
+    <div class="field has-addons">
+        <div class="control">
+            <input class="input" id="username" type="text" placeholder="Find a user">
+        </div>
+        <div class="control">
+            <a class="button is-info" onclick="load_user_list()">
+                Search
+            </a>
+        </div>
+    </div>
+    <hr />
+    <div id="userlist_holder">
+
+    </div>
+</div>
+{% endblock %}

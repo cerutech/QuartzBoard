@@ -1,0 +1,82 @@
+{% extends 'imports.html' %}
+{% block sidebar %}
+<div class="column is-3">
+    <aside class="menu">
+        <p class="menu-label">
+            Manage
+        </p>
+        <ul class="menu-list">
+            <li><a href="/admin/roles">Roles</a></li>
+            <li><a href="/admin/roles/give">Give roles</a></li>
+        </ul>
+        <p class="menu-label">
+            Your roles
+        </p>
+        <ul class="menu-list">
+            {% if not roles %}
+            <li>
+
+            </li>
+            {% endif %}
+            {% for role in roles %}
+            <li><a {% if role.roleID ==roleID %}class="is-active" {% endif %}>{{role.name}}</a></li>
+            {% endfor %}
+            <li onclick="$('#new_role').slideToggle()"><a>+ New</a></li>
+        </ul>
+
+    </aside>
+    <div id="new_role" style="display:none;">
+        <hr />
+        <div class="">
+            <form action="/api/admin/roles/create" method="post" enctype="multipart/form-data">
+                <div class="field has-addons">
+                    <div class="control">
+                        <input class="input" name="name" type="text" placeholder="Role name" required>
+                    </div>
+                    <div class="control">
+                        <button class="button is-info">
+                            Create
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="box">
+    <h1 class="title">Editing: {{role.name}}</h1>
+    <form action="/api/admin/roles/{{role.roleID}}/edit" enctype="multipart/form-data" method="post">
+        <div class="field">
+            <label class="label">Name</label>
+            <div class="control">
+                <input class="input" type="text" placeholder="Role name" name="name" value="{{role.name}}">
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="control">
+                <p><b>Permissions</b></p>
+                <a href="http://quartzboard.org/help/roles#permissions">Permissions and what they mean</a><br />
+                {% for perm_name, value in role.permissions.items() %}
+                <label class="checkbox">
+                    <input type="checkbox" name="{{perm_name}}" {% if permissions.has(perm_name) %}checked="checked"{% endif %}>
+                    {{perm_name|replace('_', ' ')|title}}
+                </label>
+                <br />
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-link">Submit</button>
+            </div>
+            <div class="control">
+                <button class="button is-text">Cancel</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

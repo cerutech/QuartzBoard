@@ -1,0 +1,33 @@
+{% if not users %}
+<h1 class="subtitle">Sorry, no users were found</h1>
+{% endif %}
+{% for user in users %}
+<article class="media">
+    <figure class="media-left">
+        <div class="field has-addons">
+            <div class="control is-expanded">
+                <div class="select is-fullwidth">
+                    <select name="role" id="role_{{user.userID}}">
+                        {% for role in roles %}
+                        <option value="{{role.roleID}}" {% if user.roleID == role.roleID %}selected{% endif %}>{{role.name}}</option>
+                        {% endfor %}
+                        <option value="remove" {% if not user.roleID %}selected{% endif %}>Remove role</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <button type="submit" class="button is-primary" onclick="set_role('{{user.userID}}')">Set Role</button>
+            </div>
+        </div>
+    </figure>
+    <div class="media-content">
+        <div class="content">
+            <p>
+                <strong>{{user.username}}</strong><br />
+                Current role: {{db.db.roles.find_one({'roleID': user.get("roleID", "0")}).name}}
+            </p>
+        </div>
+    </div>
+</article>
+<hr />
+{% endfor %}

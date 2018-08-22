@@ -1,0 +1,44 @@
+{% extends 'imports.html' %}
+{% block sidebar %}
+<div class="column is-3">
+    <aside class="menu">
+        <p class="menu-label">
+            Manage
+        </p>
+        <ul class="menu-list">
+            <li><a href="/admin/roles">Roles</a></li>
+            <li><a href="/admin/roles/give">Give roles</a></li>
+        </ul>
+        <p class="menu-label">
+            Your roles
+        </p>
+        <ul class="menu-list">
+            {% for role in roles %}
+            <li><a href="/admin/roles/{{role.roleID}}">{{role.name}}</a></li>
+            {% endfor %}
+            <li onclick="$('#new_role').slideToggle()"><a>+ New</a></li>
+        </ul>
+
+    </aside>
+    <div id="new_role" style="display:none;">
+        <hr />
+        <div class="">
+            <form action="/api/admin/roles/create" method="post" enctype="multipart/form-data">
+                <div class="field has-addons">
+                    <div class="control">
+                        <input class="input" name="name" type="text" placeholder="Role name" required>
+                    </div>
+                    <div class="control">
+                        <button class="button is-info">
+                            Create
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+
+{% endblock %}

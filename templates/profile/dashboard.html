@@ -25,6 +25,15 @@
         <ul class="menu-list">
             <li onclick="toggle_tab('dash_images')"><a class="tab" data-tab="dash_images">Images</a></li>
         </ul>
+        <p class="menu-label">
+            Admin
+        </p>
+        <ul class="menu-list">
+            <li onclick="toggle_tab('dash_permissions')"><a class="tab" data-tab="dash_permissions">Your Permissions</a></li>
+            {% if user.role.has('edit_roles') %}
+            <li><a class="tab" href="/admin/roles">Manage Roles</a></li>
+            {% endif %}
+        </ul>
     </aside>
 </div>
 {% endblock %}
@@ -39,6 +48,7 @@
 </style>
 <div class="box">
     <h1 class="title is-4">Hey, {{user.username}}</h1>
+    <h4 class="subtitle is-6">{{user.role.name}}</h4>
 </div>
 <div class="box">
     <div class="tab is-active" data-tab="dash_main">
@@ -55,6 +65,16 @@
     </div>
     <div class="tab" data-tab="dash_settings">
         <p>Coming soon!</p>
+    </div>
+    <div class="tab" data-tab="dash_permissions">
+        <p>Here are your permissions. If you wish to have a special role that enables you to do an action, please contact the site owner/moderation team inorder to get a role</p>
+        <p><b>Your current role: {{user.role.name}}</b></p>
+        <div class="" style="">
+            {% for perm_name, perm_value in user.role.permissions.items() %}
+            <span class="tag {%if perm_value%}is-success{%else%}is-danger{%endif%} is-medium">{{perm_name|replace('_', ' ')|title}}</span><br />
+            
+            {% endfor %}
+        </div>
     </div>
     <div class="tab" data-tab="dash_images">
         <script>
@@ -104,7 +124,6 @@
         {% endfor %}
         {% endif %}
         {% endwith %}
-
     </div>
     <div class="tab" data-tab="dash_settinsgs">
         <p>Coming soon!</p>

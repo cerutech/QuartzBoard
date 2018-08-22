@@ -23,7 +23,7 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 class Permissions():
-    def __init__(self, **kwargs):
+    def __init__(self, name='', **kwargs):
         """
         Some explaining: 
         All permissions start with a prefix. This is either:
@@ -36,19 +36,8 @@ class Permissions():
         For instance, if a role has edit=True then they have full permissions to edit 
         tags, images etc..
         """
-
-        defaults = {'create_image': True, # upload
-                    'delete_image':False,
-                    'delete_own_image':True,
-                    'edit_post': False,
-                    'edit_own_post': True,
-                    'create_tags': True, # allows for the controlling of new tags in the database
-                    # forces already made tags to be used
-                    'edit_own_tags': True,
-                    'edit_user_permissions': False,
-                    
-                    'edit_site_settings': False, # gives access to /admin/settings
-                    }
+        self.name = name
+        defaults = json.load(open('config/role_defaults.json'))
 
         for k, v in kwargs.items():
             defaults[k] = v
@@ -66,11 +55,11 @@ class Permissions():
 
         return self.permissions[perm_name]
 
-
 ROLES = {'admin': Permissions(edit=True,
                               create=True,
-                              delete=True),
-         'user': Permissions(edit=True)}
+                              delete=True,
+                              name='Admin'),
+         'user': Permissions(name='User')}
 
 
 try:
@@ -119,6 +108,8 @@ class RecordObject():
 
         return s + ', '.join(items) + '>'
 
+
+
 class DataBase:
     def __init__(self):
         self.db_connection = pymongo.MongoClient()
@@ -136,6 +127,20 @@ class DataBase:
             self.logger.debug('Not using Developer Mode. Debug endpoints are closed.')
             self.config.set(developer_mode=False)
 
+        # get user roles from database
+        roles = self.db.roles.find()
+
+        self.roles = {}
+        if not roles:
+            # if there are no user created roles
+            # then set the current roles as that of the defaults
+            self.roles = ROLES
+        else:
+            for role in roles:
+                self.roles[role['name']] = Permissions(**role['permissions'])
+
+        self.role_defaults = json.load(open('config/role_defaults.json'))
+
         # use DigitalOcean's Spaces API to handle
         # file storage
 
@@ -147,7 +152,6 @@ class DataBase:
                                      endpoint_url='https://nyc3.digitaloceanspaces.com',
                                      aws_access_key_id=self.config.spaces.access_key,
                                      aws_secret_access_key=self.config.spaces.access_private)
-        print(self.config)
 
     def get_user(self, userID, search_by='userID', safe_mode=True):
         user = self.db.users.find_one({search_by: userID})
@@ -320,9 +324,19 @@ class DataBase:
         return string
 
     # permissions
-    def get_role(self, role_name):
-        return ROLES[role_name]
+    def get_role(self, roleID):
+        try:
+            int(roleID)
+        except:
+            return ROLES[roleID]
+        else:
+            r = db.db.roles.find_one({'roleID': roleID})
+            return self.wrap_permissions(name=r['name'], **r['permissions'])
 
+    def wrap_permissions(self, **kwargs):
+        return Permissions(**kwargs)
+
+    
 try:
     db = db
 except:

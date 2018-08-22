@@ -3,6 +3,7 @@ import flask
 import secrets
 import requests
 import threading
+from quartz import auth
 from datetime import datetime
 from PIL import Image, ImageFont
 from server import db
@@ -46,7 +47,7 @@ def search():
                 broken_tags.append(tag)
             if tag_meta:
                 db.db.tags.update_one({'tagID': tag_meta['tagID']},
-                                        {'$set': {'searches': tag_meta['searches'] + 1}})
+                                      {'$set': {'searches': tag_meta['searches'] + 1}})
 
     results = db.get_images(tags=tags,
                             page_number=flask.request.args.get('page', '1'))
@@ -67,6 +68,7 @@ def show_image(fileID):
     return flask.render_template('image/show.html', **locals())
 
 @image_api.route('/api/image/<fileID>/delete')
+@auth.require(needs=['delete_image'])
 def delete_image(fileID):
     if not flask.g.is_logged_in:
         return flask.jsonify({'success': False,

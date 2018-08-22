@@ -4,6 +4,7 @@ import flask
 import secrets
 import threading
 import humanize
+from quartz import auth
 from datetime import datetime
 from PIL import Image
 from server import db
@@ -46,15 +47,13 @@ def process_image(image_bytes, fileID, author=None):
 
 
 @profile_api.route('/profile')
+@auth.require()
 def profile():
-    # shows your profile
-    if not flask.g.is_logged_in:
-        return flask.redirect('/login')
-
     return flask.render_template('profile/dashboard.html')
 
 
 @profile_api.route('/profile/upload', methods=['GET','POST'])
+@auth.require(needs=['create_image']) # require the create_image permission
 def upload_image():
     if not flask.g.is_logged_in:
         return flask.redirect('/login')
@@ -62,7 +61,7 @@ def upload_image():
     if flask.request.method == 'POST':
         data = flask.request.form
         if data['terms'] != 'on':
-            return flask.redirect('/profile/upload?terms=0')
+            return flask.redirect('/profile/upload?terms=1')
 
         #fileID = db.make_token(length=32)
         fileID = db.make_word_token(word_count=4)

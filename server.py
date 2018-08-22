@@ -74,9 +74,10 @@ def utility_processor():
         else: 
             flask.g.user = user
             if db.config.get('ownerID', '0') == str(user['userID']):
-                flask.g.user['role'] = ROLES['admin']
+                flask.g.user['role'] = db.get_role('admin')
             else:
-                flask.g.user['role'] = ROLES[user.get('role', 'user')]
+                flask.g.user['role'] = db.get_role(user['roleID'])
+
             flask.g.is_logged_in = True
             is_logged_in = True
     else:
@@ -106,11 +107,13 @@ if __name__ == '__main__':
     from blueprint.auth import auth_api
     from blueprint.profile import profile_api
     from blueprint.image import image_api
+    from blueprint.admin import admin_api
 
     app.register_blueprint(auth_api)
     app.register_blueprint(profile_api)
     app.register_blueprint(image_api)
-    
+    app.register_blueprint(admin_api)
+
     template_functions = {'get_popular_tags': db.get_popular_tags,
                           'get_user': db.get_user,
                           'get_tag': db.get_tag,

@@ -325,6 +325,9 @@ class DataBase:
 
     # permissions
     def get_role(self, roleID):
+        if not roleID:
+            return ROLES['user']
+
         try:
             int(roleID)
         except:

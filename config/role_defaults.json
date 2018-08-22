@@ -1,0 +1,12 @@
+{
+  "create_image": true,
+  "delete_image": false,
+  "delete_own_image": true,
+  "edit_post": false,
+  "edit_own_post": true,
+  "create_tags": true,
+  "edit_own_tags": true,
+  "edit_user_permissions": false,
+  "edit_site_settings": false,
+  "edit_roles": false
+}

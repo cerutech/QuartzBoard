@@ -112,7 +112,9 @@ class RecordObject():
 
 class DataBase:
     def __init__(self):
-        self.db_connection = pymongo.MongoClient()
+        self.config = RecordObject(**config)
+        
+        self.db_connection = pymongo.MongoClient(self.config.mongoURI)
 
         self.db = self.db_connection.quartz
 
@@ -120,7 +122,7 @@ class DataBase:
 
         session = boto3.session.Session()
 
-        self.config = RecordObject(**config)
+        
         self.logger = logging.getLogger('quartz.database')
 
         if not self.config.get('developer_mode'):
@@ -327,7 +329,6 @@ class DataBase:
     def get_role(self, roleID):
         if not roleID:
             return ROLES['user']
-
         try:
             int(roleID)
         except:

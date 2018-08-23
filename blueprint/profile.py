@@ -51,7 +51,6 @@ def process_image(image_bytes, fileID, author=None):
 def profile():
     return flask.render_template('profile/dashboard.html')
 
-
 @profile_api.route('/profile/upload', methods=['GET','POST'])
 @auth.require(needs=['create_image']) # require the create_image permission
 def upload_image():
@@ -70,7 +69,7 @@ def upload_image():
         #if not image_bytes:
         #    return flask.redirect('/profile/upload')
         tags_used = [str(x) for x in data['tags'].split(',')]
-        print(data, 'New image')
+
         new_image = {'userID': flask.g.user['userID'],
                      'title': data['title'],
                      'filename': secure_filename(image.filename),
@@ -79,7 +78,7 @@ def upload_image():
                      'fileID': fileID,
                      'views': [],
                      'status': 'public',
-                     'nsfw': True if data['is_nsfw'] == "on" else False,
+                     'nsfw': True if data.get('is_nsfw', 'off') == "on" else False,
                      'processing': True}
 
         db.db.images.insert_one(new_image)

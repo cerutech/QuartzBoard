@@ -49,12 +49,11 @@
     {% endif %}
     {% endif %}
 </div>
-
 {% endblock %}
 {% block content %}
 {% with author = get_user(image_meta['userID']) %}
 <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="height:100%;width:100%;max-width:825px;" />
+    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="width:100%;max-width:750px;" />
 </div>
 <hr />
 <div class="box">

@@ -42,6 +42,7 @@
         align-items:center;
         justify-content:center;
         position:relative;
+        flex-flow:column
     }
     .top_image_holder > img {
         height:100%;
@@ -200,9 +201,6 @@
         }).done(function (data) {
             if (data['success']) {
                 clean_up()
-
-
-
                 if (data['needs_adding']) {
                     show_tag_form(tag_name);
                 } else {
@@ -230,7 +228,7 @@
             dataType: 'json',
             data: JSON.stringify(window.tags)
         }).done(function (resp) {
-            console.log(resp)
+            clean_up()
             holder.html(resp['html'])
         })
     }
@@ -252,6 +250,7 @@
 </script>
 <div class="top_image_holder box" style="display:none;">
     <img src="" id="new_image_holder"/>
+    <h1 class="subtitle" id="new_image_blury" style="display:none;margin-bottom:0;margin-top:1em;">Heads up! This image may be blury when shown to users with larger screens!</h1>
     <div class="options_list">
         <a onclick="show_more()" style="font-size:2em;"><i class="fas fa-search"></i></a>
     </div>
@@ -323,6 +322,7 @@
             window.addEventListener('load', function () {
                 document.querySelector('input[type="file"]').addEventListener('change', function () {
                     if (this.files && this.files[0]) {
+                        $('#new_image_blury').css('display', 'none')
                         var img = $('.top_image_holder > img')[0];
                         console.log(img)
                         img.src = URL.createObjectURL(this.files[0]); // set src to file url
@@ -330,7 +330,11 @@
                             $('.top_image_holder').css('display', 'flex');
                             $('.overlay').removeClass('is-hidden');
                             $('.overlay > svg').addClass('checkmark');
-                            setTimeout(function () { $('.overlay').fadeOut();},1700)
+                            setTimeout(function () { $('.overlay').fadeOut(); }, 1700)
+                            if (this.naturalWidth < 250) {
+                                // image might be blury
+                                $('#new_image_blury').css('display', 'block')
+                            }
                         }
                     }
                 });

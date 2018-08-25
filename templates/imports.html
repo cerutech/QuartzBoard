@@ -73,7 +73,7 @@
 {% endmacro %}
 {% macro search_bar(tags) %}
 <div class="field has-addons">
-    <div class="control">
+    <div class="control is-expanded ">
         {% if tags %}
         <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="{% for tagID in tags %}{% with tag = get_tag(tagID) %}{{tag.name}} {%endwith%}{%endfor%}">
         {% else %}

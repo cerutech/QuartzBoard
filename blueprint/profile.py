@@ -8,9 +8,20 @@ from quartz import auth
 from datetime import datetime
 from PIL import Image
 from server import db
+from gridfs import errors
 from werkzeug.utils import secure_filename
 
 profile_api = flask.Blueprint(__name__, 'profile')
+
+def make_thumbnail(image_bytes, size=(128, 128)):
+    bio = io.BytesIO()
+    img = Image.open(image_bytes)
+    img.thumbnail(size, Image.ANTIALIAS)
+    img.save(bio, format='PNG')
+    bio.seek(0)
+
+    return bio
+
 
 def process_image(image_bytes, fileID, author=None):
     img = Image.open(image_bytes)
@@ -20,13 +31,6 @@ def process_image(image_bytes, fileID, author=None):
     try:
         img.save(bio, format='PNG')
         bio.seek(0)
-
-        thumb = img.copy()
-        thumb.thumbnail((128, 128), Image.ANTIALIAS)
-
-        bio_thumb = io.BytesIO()
-        thumb.save(bio_thumb, format='PNG')
-        bio_thumb.seek(0)
         size = sys.getsizeof(bio)
         print("img size in memory in bytes: ", size)
         if size > (1 * 1024 * 1024): # 1MB
@@ -35,7 +39,7 @@ def process_image(image_bytes, fileID, author=None):
             location = 'gridFS'
 
         db.upload_image(bio, fileID, author=author, location=location)
-        db.upload_image(bio_thumb, fileID + '_thumb', author=author, location=location)
+        db.upload_image(make_thumbnail(image_bytes), fileID + '_thumb', author=author, location=location)
         db.db.images.update_one({'fileID': fileID}, {'$set': {'processing': False,
                                                               'location': location}})
 
@@ -43,8 +47,6 @@ def process_image(image_bytes, fileID, author=None):
         # incase of error
         # make sure to dump file from memory
         bio.close()
-        bio_thumb.close()
-
 
 @profile_api.route('/profile')
 @auth.require()
@@ -91,3 +93,42 @@ def upload_image():
     else:
 
         return flask.render_template('profile/upload.html')
+
+@profile_api.route('/profile/<userID>/avatar')
+def get_avatar(userID):
+    user_meta = db.db.users.find_one({'userID': userID})
+    if not user_meta:
+        return flask.redirect('/static/image/404.jpg')
+
+    file = db.avatar_storage.find_one(userID)
+    if not file:
+        avatar = db.generate_avatar()
+
+        with db.avatar_storage.new_file(_id=userID) as fp:
+            fp.write(avatar)
+
+        file = db.avatar_storage.find_one(userID)
+        
+    file = file.read()
+
+    return flask.send_file(io.BytesIO(file),
+                        mimetype='image/png')
+
+
+@profile_api.route('/profile/avatar/upload', methods=['POST'])
+@auth.require(needs=['upload_avatar'])
+def upload_new_avatar():
+    new_avatar = flask.request.files['avatar']
+    print(new_avatar.stream)
+    avatar_small = make_thumbnail(new_avatar.stream, size=(256, 256))
+    print(sys.getsizeof(avatar_small))
+    # db exists returns false for all attemtps to check
+
+    db.avatar_storage.delete(flask.g.user['userID'])
+    with db.avatar_storage.new_file(_id=str(flask.g.user['userID'])) as fp:
+        fp.write(avatar_small.read())
+
+    with open('local.png', 'wb') as fp:
+        fp.write(avatar_small.read())
+
+    return flask.redirect('/profile')

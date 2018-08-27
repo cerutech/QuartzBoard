@@ -127,7 +127,7 @@ def show_image_thumbnail(fileID):
             file = db.get_image(fileID + '_thumb')
         except AttributeError:
             # file is missing
-            db.db.images.remove({'fileID': fileID})
+            #db.db.images.remove({'fileID': fileID})
             file = generate_error_image(404)
     else:
         return flask.redirect(db.base_url + str(image_meta['userID']) + '/' + fileID + '_thumb' + '.png')
@@ -156,10 +156,16 @@ def get_tag():
 def create_tag():
     data = flask.request.form
     tag_meta = db.db.tags.find_one({'name': data['tag_name']})
-    print(tag_meta, 'META')
+
     if tag_meta:
         del tag_meta['_id']
         return flask.jsonify(tag_meta)
+
+    if not data['tag_name']:
+        return flask.jsonify({'success':False, 'msg': 'Tag name is missing'})
+
+    if not data['type']:
+        return flask.jsonify({'success':False, 'msg': 'Tag type is missing'})
 
     tag_data = {'name': data['tag_name'],
                 'type': data['type'],
@@ -175,7 +181,6 @@ def create_tag():
 
     db.db.tags.insert_one(tag_data)
     del tag_data['_id']
-    print(tag_data, 'METTA2')
     return flask.jsonify({'success': True,
                           'tag': tag_data})
 
@@ -197,3 +202,7 @@ def render_tag_list():
     tags = [x for x in tags if x is not None]
     return flask.jsonify({'success': True,
                           'html': flask.render_template('image/utils/render_tag_list.html', **locals())})
+
+@image_api.route('/api/image/generate_avatar')
+def gen_ava():
+    return flask.send_file(db.generate_avatar(hash=flask.request.remote_addr), mimetype='image/png')

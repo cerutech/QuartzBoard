@@ -1,3 +1,4 @@
+import io
 import secrets
 import pymongo
 import gridfs
@@ -5,6 +6,7 @@ import hashlib
 import boto3
 import json
 import logging
+import pagan # avatar generator
 
 logger = logging.getLogger('quartz')
 logger.setLevel(logging.DEBUG)
@@ -43,6 +45,7 @@ class Permissions():
             defaults[k] = v
 
         self.permissions = defaults
+        
 
     def has(self, perm_name):
         if not perm_name in self.permissions:
@@ -62,6 +65,8 @@ ROLES = {'admin': Permissions(edit=True,
          'user': Permissions(name='User')}
 
 
+site_config = json.load(open('config/site.json'))
+
 try:
     config = json.load(open('config.json'))
 except FileNotFoundError:
@@ -69,6 +74,8 @@ except FileNotFoundError:
 except json.JSONDecodeError:
     logging.error('JSON config is malformed. Using default config')
     config = {}
+
+config['site'] = site_config
 
 class RecordObject():
     def __init__(self, *args, **kwargs):
@@ -108,7 +115,9 @@ class RecordObject():
 
         return s + ', '.join(items) + '>'
 
-
+class Utils():
+    def b64_encode(self, data):
+        return secrets.base64.b64encode(data).decode("ascii")
 
 class DataBase:
     def __init__(self):
@@ -118,7 +127,8 @@ class DataBase:
 
         self.db = self.db_connection.quartz
 
-        self.grid_storage = gridfs.GridFS(self.db_connection.file_storage)
+        self.grid_storage = gridfs.GridFS(self.db_connection.image_storage)
+        self.avatar_storage = gridfs.GridFS(self.db_connection.avatar_storage)
 
         session = boto3.session.Session()
 
@@ -155,6 +165,8 @@ class DataBase:
                                      aws_access_key_id=self.config.spaces.access_key,
                                      aws_secret_access_key=self.config.spaces.access_private)
 
+        self.utils = Utils()
+
     def get_user(self, userID, search_by='userID', safe_mode=True):
         user = self.db.users.find_one({search_by: userID})
         if not user:
@@ -165,6 +177,21 @@ class DataBase:
             del user['password_hash']
 
         return user
+
+    def generate_avatar(self, hash=None):
+        """
+        Generate a avatar from a random hash
+        
+        Returns a bytesIO object
+        """
+        if not hash:
+            hash = secrets.token_urlsafe(16)
+
+        avatar = pagan.Avatar(hash, pagan.SHA512)
+        bio = io.BytesIO()
+        avatar.img.save(bio, format='PNG')
+        bio.seek(0)
+        return bio
 
     def upload_image(self, image_bytes, fileID, author=None, location='gridFS'):
         if location == 'gridFS':
@@ -207,7 +234,7 @@ class DataBase:
         """
         skips = page_size * (int(page_number ) - 1)
         if author:
-            return self.db_resp(self.db.images.find({'userID': int(author)}).sort(sort_by, -1).skip(skips).limit(page_size))
+            return self.db_resp(self.db.images.find({'userID': str(author)}).sort(sort_by, -1).skip(skips).limit(page_size))
 
         if not tags:
             return self.db_resp(self.db.images.find().sort(sort_by, -1).skip(skips).limit(page_size))

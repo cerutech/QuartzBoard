@@ -18,7 +18,7 @@ class Auth():
                 role = user['role']
                 image_meta = {}
                 if 'fileID' in kwargs:
-                    image_meta = db.get_image(kwargs['fileID'])
+                    image_meta = db.db.images.find_one({'fileID': kwargs.get('fileID')})
                     
                 if needs:
                     for need in needs:

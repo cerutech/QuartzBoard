@@ -127,7 +127,7 @@ def show_image_thumbnail(fileID):
             file = db.get_image(fileID + '_thumb')
         except AttributeError:
             # file is missing
-            #db.db.images.remove({'fileID': fileID})
+            db.db.images.remove({'fileID': fileID})
             file = generate_error_image(404)
     else:
         return flask.redirect(db.base_url + str(image_meta['userID']) + '/' + fileID + '_thumb' + '.png')

@@ -119,16 +119,10 @@ def get_avatar(userID):
 @auth.require(needs=['upload_avatar'])
 def upload_new_avatar():
     new_avatar = flask.request.files['avatar']
-    print(new_avatar.stream)
     avatar_small = make_thumbnail(new_avatar.stream, size=(256, 256))
-    print(sys.getsizeof(avatar_small))
     # db exists returns false for all attemtps to check
-
     db.avatar_storage.delete(flask.g.user['userID'])
     with db.avatar_storage.new_file(_id=str(flask.g.user['userID'])) as fp:
-        fp.write(avatar_small.read())
-
-    with open('local.png', 'wb') as fp:
         fp.write(avatar_small.read())
 
     return flask.redirect('/profile')

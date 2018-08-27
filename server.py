@@ -2,6 +2,7 @@ import os; os.chdir(os.path.realpath(__file__).replace('server.py',''))
 import flask
 import humanize
 import logging
+import sys
 import  flask_profiler
 from quartz import *
 
@@ -11,6 +12,12 @@ app = flask.Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SECRET_KEY'] = db.config.secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
+
+# if cache
+if db.config.site.cache:
+    db.logger.info('Using GZIP Compression')
+    from flask_compress import Compress
+    Compress(app)
 
 app.config["flask_profiler"] = {
     "enabled": db.config.developer_mode,
@@ -57,6 +64,12 @@ def confirm_age():
     else:
         return flask.render_template('confirm.html')
 
+if not db.config.site.show_errors:
+    @app.errorhandler(Exception)
+    def unhandled_exception(e):
+        db.logger.error('Unhandled Exception: %s', (e))
+        return flask.render_template('errors/500.html'), 500
+
 @app.before_request
 def utility_processor():
     user = {}
@@ -93,14 +106,13 @@ def utility_processor():
         pass
     else:
         if not flask.request.cookies.get('confirmed') and ('confirm' not in flask.request.url_rule.rule):
-            return flask.redirect('/confirm')
-
+            pass
 
 @app.context_processor
 def ctx_processor():
     return {'user': flask.g.user,
             'is_logged_in': flask.g.is_logged_in,
-            'dark_mode': flask.request.cookies.get('dark_mode', 'off'),
+            'dark_mode': flask.request.cookies.get('dark_mode', 'on'),
             'enable_nsfw': flask.request.cookies.get('enable_nsfw', '0')}
 
 if __name__ == '__main__':

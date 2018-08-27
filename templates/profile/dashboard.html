@@ -46,15 +46,21 @@
         display:block
     }
 </style>
-<div class="box">
-    <h1 class="title is-4">Hey, {{user.username}}</h1>
-    <h4 class="subtitle is-6">{{user.role.name}}</h4>
+<div class="box" style="display:flex;">
+    <img style="border-radius:8px;height:64px;margin-right:1em;" src="/profile/{{user.userID}}/avatar">
+    <div style="display:flex;justify-content:center;flex-flow:column">
+        <h1 class="title is-4">
+            Hey, {{user.username}}
+        </h1>
+        <h4 class="subtitle is-6">{{user.role.name}}</h4>
+    </div>
 </div>
 <div class="box">
     <div class="tab is-active" data-tab="dash_main">
         <div class="columns">
             <div class="column">
                 <p>This is your dashboard. Here is where you can see your images as well as edit some of the settings</p>
+                
             </div>
             <div class="column">
                 <div class="notification is-dark" style="display:flex;justify-content:center;align-items:center;flex-flow:column">
@@ -62,9 +68,6 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="tab" data-tab="dash_settings">
-        <p>Coming soon!</p>
     </div>
     <div class="tab" data-tab="dash_permissions">
         <p>Here are your permissions. If you wish to have a special role that enables you to do an action, please contact the site owner/moderation team inorder to get a role</p>
@@ -125,8 +128,39 @@
         {% endif %}
         {% endwith %}
     </div>
-    <div class="tab" data-tab="dash_settinsgs">
-        <p>Coming soon!</p>
+    <div class="tab" data-tab="dash_settings">
+        <h1 class="title">Avatar</h1>
+        <p>Your current avatar:</p>
+        <img src="/profile/{{user.userID}}/avatar"/>
+        <p>If you wish to select a new avatar, you may pick one here:</p>
+        <form action="/profile/avatar/upload" method="post" enctype="multipart/form-data">
+            <div class="file">
+                <label class="file-label">
+                    <input class="file-input" type="file" id="avatar" name="avatar">
+                    <span class="file-cta">
+                        <span class="file-icon">
+                            <i class="fas fa-upload"></i>
+                        </span>
+                        <span class="file-label" id="filename">
+                            Select a new avatar
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <br />
+            <button class="button is-success">Update</button>
+        </form>
+        <script>
+            $('#avatar').on('change', function () {
+                // output raw value of file input
+                $('#filename').html($(this).val().replace(/.*(\/|\\)/, ''));
+
+                // or, manipulate it further with regex etc.
+                var filename = $(this).val().replace(/.*(\/|\\)/, '');
+
+                $('#filename').text(filename);
+            });
+        </script>
     </div>
 </div>
 {% endblock %}

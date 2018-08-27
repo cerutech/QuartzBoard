@@ -245,7 +245,7 @@
                                 <a class="" href="https://www.patreon.com/quartz_"><img src="https://bulma.io/images/become-a-patron.png" /></a>
                             </p>
                             <p class="control">
-                                <a class="button" href="/profile">{{user.username}}</a>
+                                <a class="button" href="/profile"><img style="height:25px;width:auto;margin-right:5px;border-radius:8px;" src="/profile/{{user.userID}}/avatar"/> {{user.username}}</a>
                             </p>
                             <p class="control">
                                 <a class="button" href="/profile/upload">Upload</a>
@@ -282,7 +282,7 @@
             {% for tag in tags %}
             {% if tag %}
             {{tag_solo(tag, column=True)}}
-            {% endif %} 
+            {% endif %}
             {% endfor %}
             {% endwith %}
 
@@ -294,6 +294,31 @@
             <a href="/ui_mode?mode=dark">Switch to dark mode</a>
             {% endif %}
             <hr />
+            <style>
+                .make_account {
+                    display: flex;
+                }
+
+                @media only screen and (max-width: 1124px) {
+                    .make_account {
+                        flex-flow: column;
+                    }
+                }
+            </style>
+            {% if not is_logged_in %}
+
+            <div class="make_account">
+                <img style="width:150px;height:150px;" src="/api/image/generate_avatar" />
+                <div style="display:flex;justify-content:center;flex-flow:column">
+                    <h1 class="title is-4">
+                        Hey you!
+                    </h1>
+                    <h4 class="subtitle is-6">You should really make an account to get the full Quartz experience!</h4>
+                    <a href="/create" class="button is-info">Create</a>
+                </div>
+            </div>
+            <!-- IS NOT LOGGED IN - ASK THEM TO MAKE AN ACCOUNT -->
+            {% endif %}
         </div>
         {% endblock %}
         <div class="column">

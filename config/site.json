@@ -1,0 +1,5 @@
+{
+  "_COMMENT": "This file holds the required fields for the server to work. Please do not remove any fields. Feel free to look at the docs and edit any of the config settings however!",
+  "cache": false,
+  "show_errors": true
+}

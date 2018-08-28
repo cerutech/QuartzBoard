@@ -16,6 +16,4 @@ app.register_blueprint(profile_api)
 app.register_blueprint(image_api)
 app.register_blueprint(admin_api)
 
-flask_profiler.init_app(app)
-
 #app.run('0.0.0.0', db.config.get('port', 8081), threaded=True)

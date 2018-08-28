@@ -3,7 +3,8 @@ import flask
 import humanize
 import logging
 import sys
-import  flask_profiler
+import flask_profiler
+import markdown
 from quartz import *
 
 logger = logging.getLogger('quartz.main')
@@ -115,6 +116,16 @@ def ctx_processor():
             'dark_mode': flask.request.cookies.get('dark_mode', 'on'),
             'enable_nsfw': flask.request.cookies.get('enable_nsfw', '0')}
 
+template_functions = {'get_popular_tags': db.get_popular_tags,
+                        'get_user': db.get_user,
+                        'get_tag': db.get_tag,
+                        'time_to_human': humanize.naturaltime,
+                        'get_images': db.get_images,
+                        'db': db,
+                        'md': markdown.markdown}
+
+app.jinja_env.globals.update(**template_functions)
+
 if __name__ == '__main__':
     from blueprint.auth import auth_api
     from blueprint.profile import profile_api
@@ -126,14 +137,7 @@ if __name__ == '__main__':
     app.register_blueprint(image_api)
     app.register_blueprint(admin_api)
 
-    template_functions = {'get_popular_tags': db.get_popular_tags,
-                          'get_user': db.get_user,
-                          'get_tag': db.get_tag,
-                          'time_to_human': humanize.naturaltime,
-                          'get_images': db.get_images,
-                          'db': db}
 
-    app.jinja_env.globals.update(**template_functions)
 
     flask_profiler.init_app(app)
 

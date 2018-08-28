@@ -4,7 +4,7 @@ Quartz
 <p align="center">The next generation image booru</p>
 
 #### Warning: This project is still in alpha. There will be bugs. You have been warned.
-##### A peak at the development server can be found [here](http://176.26.54.83:8081/)
+##### You can see the example server [here](http://quartzboard.org/)
 
 ## What you need
 You need a MongoDB as the server uses this as the database of choice. The server also uses gridFS to store images inside of said database so you need to make sure it is either local or fast and has lots of storage to keep the files in the database. 

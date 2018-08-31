@@ -14,6 +14,8 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SECRET_KEY'] = db.config.secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
+#app.config['SERVER_NAME'] = 'quartzlocal.org:8081'
+
 # if cache
 if db.config.site.cache:
     db.logger.info('Using GZIP Compression')
@@ -38,12 +40,16 @@ app.config["flask_profiler"] = {
 
 @app.route('/')
 def index():
-    images = db.get_images(page_number=1, page_size=5)
+    images = db.get_images(page_number=1, page_size=10)
     return flask.render_template('home.html', **locals())
 
 @app.route('/about')
 def about():
     return flask.render_template('about.html')
+
+@app.route('/terms')
+def terms():
+    return flask.render_template('terms.html')
 
 @app.route('/ui_mode')
 def switch_mode():
@@ -73,6 +79,7 @@ if not db.config.site.show_errors:
 
 @app.before_request
 def utility_processor():
+    # do the subdomain checker
     user = {}
     is_logged_in = False
     flask.g.is_logged_in = False
@@ -109,6 +116,12 @@ def utility_processor():
         if not flask.request.cookies.get('confirmed') and ('confirm' not in flask.request.url_rule.rule):
             pass
 
+@app.after_request
+def apply_caching(response):
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Server"] = "QuartzBoard Version {}".format(db.__version__)
+    return response
+
 @app.context_processor
 def ctx_processor():
     return {'user': flask.g.user,
@@ -122,11 +135,18 @@ template_functions = {'get_popular_tags': db.get_popular_tags,
                         'time_to_human': humanize.naturaltime,
                         'get_images': db.get_images,
                         'db': db,
-                        'md': markdown.markdown}
+                        'md': markdown.markdown,
+                        'image_utils': image_utils}
 
 app.jinja_env.globals.update(**template_functions)
 
+flask_profiler.init_app(app)
+
 if __name__ == '__main__':
+    """
+    If running in single file mode
+    this allows the server to run no matter what
+    """
     from blueprint.auth import auth_api
     from blueprint.profile import profile_api
     from blueprint.image import image_api
@@ -136,9 +156,5 @@ if __name__ == '__main__':
     app.register_blueprint(profile_api)
     app.register_blueprint(image_api)
     app.register_blueprint(admin_api)
-
-
-
-    flask_profiler.init_app(app)
 
     app.run('0.0.0.0', db.config.get('port', 8081), threaded=True)

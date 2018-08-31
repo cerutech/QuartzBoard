@@ -30,6 +30,11 @@ def generate_error_image(status_code):
 
 @image_api.route('/search')
 def search():
+    current_page = int(flask.request.args.get('page', 1))
+    if current_page == 0:
+        current_page = 1
+    
+
     to_search = flask.request.args.get('tags','*')
     tags = []
     broken_tags = []
@@ -50,9 +55,7 @@ def search():
                                       {'$set': {'searches': tag_meta['searches'] + 1}})
 
     results = db.get_images(tags=tags,
-                            page_number=flask.request.args.get('page', '1'))
-
-    total_pages = db.get_page_count(len(results))
+                            page_number=current_page)
 
     return flask.render_template('image/search.html', **locals())
 
@@ -124,7 +127,7 @@ def show_image_thumbnail(fileID):
     if image_meta.get('location', 'gridFS') == 'gridFS':
 
         try:
-            file = db.get_image(fileID + '_thumb')
+            file = db.get_image(fileID + '_thumbnail')
         except AttributeError:
             # file is missing
             db.db.images.remove({'fileID': fileID})

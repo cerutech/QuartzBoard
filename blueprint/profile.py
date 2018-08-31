@@ -4,7 +4,7 @@ import flask
 import secrets
 import threading
 import humanize
-from quartz import auth
+from quartz import auth, image_utils
 from datetime import datetime
 from PIL import Image
 from server import db
@@ -12,41 +12,6 @@ from gridfs import errors
 from werkzeug.utils import secure_filename
 
 profile_api = flask.Blueprint(__name__, 'profile')
-
-def make_thumbnail(image_bytes, size=(128, 128)):
-    bio = io.BytesIO()
-    img = Image.open(image_bytes)
-    img.thumbnail(size, Image.ANTIALIAS)
-    img.save(bio, format='PNG')
-    bio.seek(0)
-
-    return bio
-
-
-def process_image(image_bytes, fileID, author=None):
-    img = Image.open(image_bytes)
-
-    bio = io.BytesIO()
-    # reformat image into a PNG
-    try:
-        img.save(bio, format='PNG')
-        bio.seek(0)
-        size = sys.getsizeof(bio)
-        print("img size in memory in bytes: ", size)
-        if size > (1 * 1024 * 1024): # 1MB
-            location = 'S3'
-        else:
-            location = 'gridFS'
-
-        db.upload_image(bio, fileID, author=author, location=location)
-        db.upload_image(make_thumbnail(image_bytes), fileID + '_thumb', author=author, location=location)
-        db.db.images.update_one({'fileID': fileID}, {'$set': {'processing': False,
-                                                              'location': location}})
-
-    finally:
-        # incase of error
-        # make sure to dump file from memory
-        bio.close()
 
 @profile_api.route('/profile')
 @auth.require()
@@ -66,27 +31,30 @@ def upload_image():
 
         #fileID = db.make_token(length=32)
         fileID = db.make_word_token(word_count=4)
-
+        print([(k, v) for k,v in data.items()])
         image = flask.request.files['image']
         #if not image_bytes:
         #    return flask.redirect('/profile/upload')
         tags_used = [str(x) for x in data['tags'].split(',')]
 
         new_image = {'userID': flask.g.user['userID'],
-                     'title': data['title'],
                      'filename': secure_filename(image.filename),
                      'uploaded_at': datetime.utcnow(),
                      'tags': tags_used,
                      'fileID': fileID,
                      'views': [],
                      'status': 'public',
-                     'nsfw': True if data.get('is_nsfw', 'off') == "on" else False,
+                     'rating': data['rating'],
+                     'source': data['source'],
                      'processing': True}
 
         db.db.images.insert_one(new_image)
         author = flask.g.user['userID']
 
-        process_image(image.stream, fileID, author=author)
+        image_utils.upload_to_quartz(image.stream.read(), fileID, author)
+
+
+        #process_image(image.stream, fileID, author=author)
         #threading.Thread(None, target=process_image, args=(image.stream, fileID, )).start()
         return flask.redirect('/image/{}'.format(fileID))
 
@@ -94,8 +62,34 @@ def upload_image():
 
         return flask.render_template('profile/upload.html')
 
+@profile_api.route('/api/profile/update', methods=['POST'])
+@auth.require()
+def update_profile():
+    data = flask.request.form
+    to_set = {}
+
+    if data.get('sidebar_content') != flask.g.user.get('sidebar', {}).get('content'):
+        to_set['sidebar.content'] = data['sidebar_content']
+
+    if data.get('patreon') != flask.g.user.get('links', {}).get('patreon') and 0: # depreciated
+        pass
+        #if '://www.patreon.com/' in data['patreon']:
+        #    to_set['links.patreon'] = data['patreon']
+
+    if to_set:
+        db.db.users.update_one({'userID': flask.g.user['userID']}, {'$set': to_set})
+
+        return flask.jsonify({'success': True})
+    else:
+        return flask.jsonify({'success': False, 'msg': 'No changes were made'})
+
 @profile_api.route('/profile/<userID>/avatar')
 def get_avatar(userID):
+    """
+    I wrote the entire avatar system while drunk.
+    There may be some operational problems such as the URL's
+    not matching the standard
+    """
     user_meta = db.db.users.find_one({'userID': userID})
     if not user_meta:
         return flask.redirect('/static/image/404.jpg')

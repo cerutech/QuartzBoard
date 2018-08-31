@@ -39,12 +39,24 @@
     <h1 class="subtitle is-5">Info</h1>
     {% with author = db.get_user(image_meta.userID) %}
     <a href="/profile/{{author.userID}}"><b>Uploaded by: {{author.username}}</b></a>
-    {% endwith %}
+
     <p><b>Uploaded: {{image_meta.uploaded_at}}</b></p>
     <p><b>Views: {{image_meta.views|length}}</b></p>
+    <p><b>Source: {{image_meta.source or "No Source"}}</b></p>
+    <p><b>Rating: {{image_utils.get_rating(image_meta.get("rating"))}}</b></p>
     <hr />
+    {% if author.get('sidebar').content %}
+    <h1 class="subtitle">About The Author</h1>
+    <div>
+        {{md(user.get('sidebar', {}).get("content", ""), safe_mode="remove")|safe}}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+
     {% if is_logged_in %}
     {% if user.role.has("delete_image") %}
+    <hr />
     <a href="/api/image/{{image_meta.fileID}}/delete">Delete image</a>
     {% endif %}
     {% endif %}
@@ -53,7 +65,7 @@
 {% block content %}
 {% with author = get_user(image_meta['userID']) %}
 <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="width:100%;max-width:750px;" />
+    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'"/>
 </div>
 <hr />
 <div class="box">

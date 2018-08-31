@@ -262,10 +262,51 @@
     <h1 class="title">Upload</h1>
     <h2 class="subtitle">Upload a new image for the world to enjoy!</h2>
     <form method="post" enctype="multipart/form-data" id="new_image_form">
-        <input class="input" name="title" placeholder="Title" hidden/>
+        <div class="field is-centered" style="">
+            <div class="file has-name">
+                <label class="file-label">
+                    <input class="file-input" type="file" name="image" id="upload" required>
+                    <span class="file-cta">
+                        <span class="file-icon">
+                            <i class="fas fa-upload"></i>
+                        </span>
+                        <span class="file-label">
+                            Choose a file…
+                        </span>
+                    </span>
+                    <span class="file-name" id="filename">
+                        No file
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="field is-horizontal">
+            <div class="field-body">
+                <div class="field">
+                    <p class="control is-expanded">
+                        <label class="label">Source URL</label>
+                        <input class="input" name="source" type="text" placeholder="Source URL">
+                        <span class="help"></span>
+                    </p>
+                </div>
+                <div class="field">
+                    <p class="control is-expanded">
+                        <label class="label">Rating</label>
+                        <span class="select is-expanded">
+                            <select name="rating">
+                                <option value="e" selected>[E] Explicit</option>
+                                <option value="m">[M] Mature</option>
+                            </select>
+                        </span>
+                        <span class="help"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <div class="field">
-            <label><b>Tags</b></label>
-            <p>You must tag the image you are uploading inorder for it to be valid</p>
+            <label class="label">Tags</label>
+            <p>You must tag the image you are uploading in order for the image to be found</p>
             <p>If the tag does not exist, you will be asked to provide details about the tag. This is to help the server understand what it is</p>
             <!--  -->
             <div class="field has-addons">
@@ -290,24 +331,7 @@
             </div>
             <input placeholder="Tags" name="tags" id="tag_list" required hidden />
         </div>
-        <div class="field">
-            <div class="file has-name">
-                <label class="file-label">
-                    <input class="file-input" type="file" name="image" id="upload" required>
-                    <span class="file-cta">
-                        <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                        </span>
-                        <span class="file-label">
-                            Choose a file…
-                        </span>
-                    </span>
-                    <span class="file-name" id="filename">
-                        No file
-                    </span>
-                </label>
-            </div>
-        </div>
+
         <script>
             $('#upload').on('change', function () {
                 // output raw value of file input
@@ -341,17 +365,10 @@
             });
 
         </script>
-        <label class="checkbox">
-            <input type="checkbox" name="is_nsfw">
-            This image is NSFW (Explicit).
-        </label>
         <hr />
-        <div class="field">
-            <p><i>By uploading this image you agree to the following terms:<br />1) The image is your property only 2) The content is not illegal in the uploading country. If you break any of these rules then your account will be terminated and you will be banned from using the site.</i></p>
-        </div>
         <label class="checkbox">
             <input type="checkbox" name="terms" required>
-            I agree to the <a href="/terms">terms and conditions</a>. You also agree to the upload terms as listed above and <a href="/profile/upload/terms">here</a>
+            I agree that my image does not break any of the rules inside QuartzBoard's <a href="/terms">terms of service</a>.
         </label>
 
         <br /><br /><button class="button is-success" id="submit_form">Upload</button>

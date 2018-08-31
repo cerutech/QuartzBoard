@@ -20,11 +20,52 @@
         The following tags do not exist: {% for tag in broken_tags %}{{tag}}, {% endfor %}
     </div>
     {% endif %}
-    <h1 class="title">Search results:</h1>
+    <h1 class="title">Search Results</h1>
+    <h3 class="subtitle">Found {{db.count_images(tags)}} images</h3>
+    <script>
+        function update_query_string(key, value, url) {
+            if (!url) url = window.location.href;
+            var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi"),
+                hash;
+
+            if (re.test(url)) {
+                if (typeof value !== 'undefined' && value !== null)
+                    return url.replace(re, '$1' + key + "=" + value + '$2$3');
+                else {
+                    hash = url.split('#');
+                    url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+                    if (typeof hash[1] !== 'undefined' && hash[1] !== null)
+                        url += '#' + hash[1];
+                    return url;
+                }
+            }
+            else {
+                if (typeof value !== 'undefined' && value !== null) {
+                    var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                    hash = url.split('#');
+                    url = hash[0] + separator + key + '=' + value;
+                    if (typeof hash[1] !== 'undefined' && hash[1] !== null)
+                        url += '#' + hash[1];
+                    return url;
+                }
+                else
+                    return url;
+            }
+        }
+        function goto_page(page_number) {
+            window.location = update_query_string('page', page_number)
+        }
+    </script>
+    <div class="buttons has-addons">
+        <span class="button" onclick="goto_page('{{current_page|int - 1}}')">Previous Page</span>
+        <span class="button" onclick="goto_page('{{current_page|int + 1}}')">Next Page</span>
+    </div>
     <div class="image_container">
         {% if results %}
         {% for image in results %}
-        <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail">
+        <div class="image_handler">
+            <img class="image image_result" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail">
+        </div>
         {% endfor %}
         {% else %}
         <div class="notification is-warning">

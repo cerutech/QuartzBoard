@@ -129,9 +129,69 @@
         {% endwith %}
     </div>
     <div class="tab" data-tab="dash_settings">
-        <h1 class="title">Avatar</h1>
+        <h1 class="title">Settings</h1>
+        <form id="update_profile">
+            <div class="field">
+                <label><b>Sidebar Text</b></label>
+                <p>Markdown is supported. Below are a few macros for you to get started with:</p>
+                <script>
+                    function insert_patreon() {
+                        var txt = '[![My Patreon](https://c5.patreon.com/external/logo/become_a_patron_button.png)](https://patreon.com/<yourPatreonId>)'
+                        _insert(txt)
+                    }
+                    function insert_image() {
+                        var txt = '![image]( imageUrlHere )'
+                        _insert(txt)
+                    }
+                    function _insert(text) {
+                        $('#sidebar_content').val($('#sidebar_content').val() + '  ' + text)
+                    }
+                </script>
+                <div class="field has-addons">
+                    <p class="control">
+                        <a class="button" onclick="insert_patreon()">
+                            <span class="icon is-small">
+                                <i class="fab fa-patreon"></i>
+                            </span>
+                            <span>Patreon Button</span>
+                        </a>
+                    </p>
+                    <p class="control">
+                        <a class="button" onclick="insert_image()">
+                            <span class="icon is-small">
+                                <i class="far fa-image"></i>
+                            </span>
+                            <span>Image</span>
+                        </a>
+                    </p>
+                </div>
+                <textarea class="textarea" name="sidebar_content" id="sidebar_content" placeholder="Sidebar Text">{{ user.get('sidebar').content }}</textarea>
+            </div>
+            <!--<div class="field">
+                <label>Patreon URL</label>
+                <input class="input" value="{{user.get('links', {}).patreon}}" name="" />
+            </div>-->
+
+            <a class="button is-success send_form">Update Settings</a>
+        </form>
+        <script>
+            $('.send_form').click(function () {
+                $.ajax({
+                    url: '/api/profile/update',
+                    method: 'post',
+                    data: $('#update_profile').serialize(),
+                }).done(function (data) {
+                    if (data['success']) {
+                        show_notification('Update was successful', 'is-success')
+                    } else {
+                        show_notification('Could not update: ' + data['msg'], 'is-warning')
+                    }
+                })
+            })
+        </script>
+        <hr />
         <p>Your current avatar:</p>
-        <img src="/profile/{{user.userID}}/avatar"/>
+        <img src="/profile/{{user.userID}}/avatar" style="height:100px;width:auto;"/>
         <p>If you wish to select a new avatar, you may pick one here:</p>
         <form action="/profile/avatar/upload" method="post" enctype="multipart/form-data">
             <div class="file">
@@ -148,7 +208,7 @@
                 </label>
             </div>
             <br />
-            <button class="button is-success">Update</button>
+            <button class="button is-success">Update Avatar</button>
         </form>
         <script>
             $('#avatar').on('change', function () {

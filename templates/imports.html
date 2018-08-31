@@ -148,6 +148,39 @@
             width: 100%;
             height: 100%;
         }
+
+        .is-centered {
+            display:flex;justify-content:center;align-items:center;
+        }
+        .image_result {
+            width: auto;
+            max-height: 128px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blur_overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            filter: blur(5px);
+            z-index: 99;
+        }
+
+        .image_handler {
+            width: 128px;
+            height: 128px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1em;
+            margin-left: 0;
+            position: relative
+        }
     </style>
     <script>
         function open_image(imageID) {
@@ -356,6 +389,12 @@
             {% endblock %}
         </div>
     </div>
-
+    <footer class="footer" style="background:none;">
+        <div class="content has-text-centered">
+            <p>
+                Powered By <a href="https://github.com/AggressivelyMeows/Quartz">QuartzBoard</a> | <a href="/terms">Terms Of Service</a>
+            </p>
+        </div>
+    </footer>
 
 </body>

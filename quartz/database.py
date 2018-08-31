@@ -412,7 +412,7 @@ class DataBase:
         aka, remove spaces, lower all characters
         """
         to_change = to_change.lower()
-        to_change = self.make_url_safe(to_change, safe='_').lower()
+        to_change = self.make_url_safe(to_change).lower()
         return to_change
 
     # permissions

@@ -28,8 +28,8 @@ def generate_error_image(status_code):
 
     return bytesIO
 
-@image_api.route('/search')
-def search():
+@image_api.route('/old_search')
+def old_search():
     current_page = int(flask.request.args.get('page', 1))
     if current_page == 0:
         current_page = 1
@@ -56,6 +56,31 @@ def search():
 
     results = db.get_images(tags=tags,
                             page_number=current_page)
+
+    return flask.render_template('image/search.html', **locals())
+
+@image_api.route('/search')
+def search():
+    current_page = int(flask.request.args.get('page', 1))
+    if current_page == 0:
+        current_page = 1
+
+    search_tags = flask.request.args.get('tags', 'any').split()
+    rating = 'any'
+    author = 'any'
+    fandom = 'any'
+    for tag in search_tags:
+        if 'rating:' in tag:
+            rating = tag.split(':')[1]
+        if 'author:' in tag:
+            author = tag.split(':')[1]
+
+
+    results = db.search_images(tag_names=search_tags,
+                               rating=rating,
+                               author=author,
+                               page_number=current_page,
+                               count=True)
 
     return flask.render_template('image/search.html', **locals())
 
@@ -142,27 +167,29 @@ def show_image_thumbnail(fileID):
 @image_api.route('/api/tags/check', methods=['POST'])
 def get_tag():
     data = flask.request.form
-    print(data)
     # check a tags name
-    tag_meta = db.get_tag(data['tag_name'], search_by='name')
-    if not tag_meta:
-        return flask.jsonify({'success': True,
-                              'needs_adding': True})
+    tag_meta = list(db.db.tags.find({'name': data['tag_name']})) #get_tag(data['tag_name'], search_by='name')
 
-    else:
+    if len(tag_meta) == 1:
+        tag_meta = tag_meta[0]
         del tag_meta['_id']
         return flask.jsonify({'success': True,
                               'tag': tag_meta})
+    else:
+        tags = tag_meta
+        return flask.jsonify({'success': True,
+                              'multiple_choice': True,
+                              'html': flask.render_template('image/utils/multi.html', **locals())})
 
+    # DECPRECEATED for now
+    #if not tag_meta:
+    #    return flask.jsonify({'success': True,
+    #                          'needs_adding': True})
 
 @image_api.route('/api/tags/create', methods=['POST'])
 def create_tag():
     data = flask.request.form
     tag_meta = db.db.tags.find_one({'name': data['tag_name']})
-
-    if tag_meta:
-        del tag_meta['_id']
-        return flask.jsonify(tag_meta)
 
     if not data['tag_name']:
         return flask.jsonify({'success':False, 'msg': 'Tag name is missing'})
@@ -170,7 +197,23 @@ def create_tag():
     if not data['type']:
         return flask.jsonify({'success':False, 'msg': 'Tag type is missing'})
 
+    if tag_meta:
+        bypass = False
+        if tag_meta['name'] == data['tag_name'] and tag_meta['type'] == data['type']:
+            # check if type is character and fandom is not the same
+            if tag_meta['type'] == 'character':
+                print(tag_meta.get('fandom'), data.get('fandom'))
+                if tag_meta.get('fandom_internal') and db.make_internal_name(data.get('fandom', ' ')):
+                    if tag_meta.get('fandom') != data.get('fandom'):
+                        bypass = True
+                    else:
+                        # if the tag is not type:character and fandom is not the same
+                        return flask.jsonify({'success': False, 'msg': 'Tag already exists'})
+            if not bypass:
+                return flask.jsonify({'success': False, 'msg': 'Tag already exists'})
+
     tag_data = {'name': data['tag_name'],
+                'internal_name': db.make_internal_name(data['tag_name']),
                 'type': data['type'],
                 'tagID': db.make_id(length=18),
                 'uses': 1,
@@ -181,6 +224,7 @@ def create_tag():
 
     if data['type'] == 'character' and data.get('fandom'):
         tag_data['fandom'] = data['fandom']
+        tag_data['fandom_internal'] = db.make_internal_name(data['fandom'])
 
     db.db.tags.insert_one(tag_data)
     del tag_data['_id']
@@ -203,6 +247,18 @@ def dislike_tag(tagID):
 def render_tag_list():
     tags = flask.request.get_json()
     tags = [x for x in tags if x is not None]
+    _tmp = []
+    for i, tag in enumerate(tags):
+        try:
+            int(tag) # check if the tag is of type ID
+        except:
+            _tmp.append(tag)
+        else:
+            tag = db.get_tag(str(tag))
+            _tmp.append(tag)
+
+    tags = _tmp
+        
     return flask.jsonify({'success': True,
                           'html': flask.render_template('image/utils/render_tag_list.html', **locals())})
 

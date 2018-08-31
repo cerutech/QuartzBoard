@@ -1,0 +1,28 @@
+<p>We have found multiple tags with that name. Please click on the tag you wish to use</p>
+<div class="field is-grouped is-grouped-multiline">
+
+    {% for tag in tags %}
+
+    <div class="control">
+        <div class="tags has-addons" onclick="select_tag('{{tag.tagID}}')">
+            <span class="tag is-dark">{{tag.type}}</span>
+            {% if tag.type == 'fandom' %}
+            <span class="tag is-info">{{tag.name}}</span>
+            {% endif %}
+            {% if tag.type == 'character' %}
+            <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
+            {% endif %}
+            {% if tag.type == 'kink' %}
+            <span class="tag is-warning">{{tag.name}}</span>
+            {% endif %}
+            {% if tag.type == 'author' %}
+            <span class="tag is-success">{{tag.name}}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% if not tags %}
+    <p>We couldnt find any tags with that name. Please try creating it.</p>
+    {% endif %}
+    <hr />
+</div>

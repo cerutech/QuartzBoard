@@ -21,15 +21,7 @@
     </div>
     {% endif %}
     <h1 class="title">Search Results</h1>
-    <h3 class="subtitle">Found {{results.image_count}} images</h3>
-    {% if results.evaluated_tags %}
-    <div class="tags">
-        {% for tag in results.evaluated_tags %}
-        {{tag_solo(tag, fetch=True, show_like=False)}}
-        <div style="margin:0.5em"></div>
-        {% endfor %}
-    </div>
-    {% endif %}
+    <h3 class="subtitle">Found {{db.count_images(tags)}} images</h3>
     <script>
         function update_query_string(key, value, url) {
             if (!url) url = window.location.href;
@@ -64,17 +56,13 @@
             window.location = update_query_string('page', page_number)
         }
     </script>
-    
-    {% if results.images %}
     <div class="buttons has-addons">
         <span class="button" onclick="goto_page('{{current_page|int - 1}}')">Previous Page</span>
         <span class="button" onclick="goto_page('{{current_page|int + 1}}')">Next Page</span>
     </div>
-
-    {% endif %}
     <div class="image_container">
         {% if results %}
-        {% for image in results.images %}
+        {% for image in results %}
         <div class="image_handler">
             <img class="image image_result" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail">
         </div>

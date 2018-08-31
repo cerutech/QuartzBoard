@@ -1,15 +1,15 @@
-{% macro tag_list(tags, column=False) %}
+{% macro tag_list(tags, column=False, fetch_tag=True) %}
 <style>
     .is-columned {
         display: flex;
         flex-flow: column;
     }
 </style>
-    {% for tag in tags %}
-    {% with tag = db.get_tag(tag, search_by="tagID") %}
-    {% if tag %}
+{% for tag in tags %}
+{% with tag = db.get_tag(tag, search_by="tagID") if fetch_tag else tag %}
+{% if tag %}
 <div class="control {% if column %}is-columned{% endif %}">
-    <div class="tags has-addons" onclick="add_tag('{{tag.name}}')">
+    <div class="tags has-addons" onclick="add_tag('{{tag.type}}:{{tag.name}}{% if tag.fandom %}({{tag.fandom_internal}}){% endif %}')">
         {% if user %}
         {% if db.check_tag_like(tag.tagID, user.userID) %}
         <a class="tag is-success" onclick="unlike_tag('{{tag.tagID}}')">
@@ -26,7 +26,7 @@
         <span class="tag is-info">{{tag.name}}</span>
         {% endif %}
         {% if tag.type == 'character' %}
-        <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
+        <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom_internal}}){% endif %}</span>
         {% endif %}
         {% if tag.type == 'kink' %}
         <span class="tag is-warning">{{tag.name}}</span>
@@ -41,50 +41,64 @@
     {% endfor %}
 
 {% endmacro %}
-{% macro tag_solo(tag, column=False) %}
-<div class="control {% if column %}is-columned{% endif %}">
-    <div class="tags has-addons" onclick="add_tag('{{tag.name}}')" style="margin-bottom:0px;">
-        {% if user %}
-        {% if db.check_tag_like(tag.tagID, user.userID) %}
-        <a class="tag is-success" onclick="unlike_tag('{{tag.tagID}}')">
-            <i class="fas fa-star"></i>
-        </a>
-        {% else %}
-        <a class="tag is-info" onclick="like_tag('{{tag.tagID}}')">
-            <i class="fas fa-thumbs-up"></i>
-        </a>
-        {% endif %}
-        {% endif %}
-        <span class="tag is-dark">{{tag.type}}</span>
-        {% if tag.type == 'fandom' %}
-        <span class="tag is-info">{{tag.name}}</span>
-        {% endif %}
-        {% if tag.type == 'character' %}
-        <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
-        {% endif %}
-        {% if tag.type == 'kink' %}
-        <span class="tag is-warning">{{tag.name}}</span>
-        {% endif %}
-        {% if tag.type == 'author' %}
-        <span class="tag is-success">{{tag.name}}</span>
-        {% endif %}
-    </div>
+{% macro tag_solo(tag, column=False, fetch=False, show_like=True) %}
+{% with tag = db.get_tag(tag, search_by="tagID") if fetch else tag %}
+<div class="tags has-addons" onclick="add_tag('{{tag.type}}:{{tag.name}}{% if tag.fandom %}({{tag.fandom_internal}}){% endif %}')" style="margin-bottom:0px;">
+    {% if show_like %}
+    {% if user %}
+    {% if db.check_tag_like(tag.tagID, user.userID) %}
+    <a class="tag is-success" onclick="unlike_tag('{{tag.tagID}}')">
+        <i class="fas fa-star"></i>
+    </a>
+    {% else %}
+    
+    <a class="tag is-info" onclick="like_tag('{{tag.tagID}}')">
+        <i class="fas fa-thumbs-up"></i>
+    </a>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+    <span class="tag is-dark">{{tag.type}}</span>
+    {% if tag.type == 'fandom' %}
+    <span class="tag is-info">{{tag.name}}</span>
+    {% endif %}
+    {% if tag.type == 'character' %}
+    <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom_internal}}){% endif %}</span>
+    {% endif %}
+    {% if tag.type == 'kink' %}
+    <span class="tag is-warning">{{tag.name}}</span>
+    {% endif %}
+    {% if tag.type == 'author' %}
+    <span class="tag is-success">{{tag.name}}</span>
+    {% endif %}
 </div>
+{% endwith %}
 {% endmacro %}
 {% macro search_bar(tags) %}
 <div class="field has-addons">
     <div class="control is-expanded ">
-        {% if tags %}
-        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="{% for tagID in tags %}{% with tag = get_tag(tagID) %}{{tag.name}} {%endwith%}{%endfor%}">
-        {% else %}
-        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="">
-        {% endif %}
+        <input class="input" type="text" placeholder="Search by tag" id="search_bar" value="{% for t in request.args.get('tags', '').split() %}{{t}} {% endfor %}">
     </div>
     <div class="control">
         <a class="button is-info" id="search">
             Search
         </a>
     </div>
+    <div class="control">
+        <a class="button is-info is-link" onclick="$('#search_help').slideToggle()">
+            <i class="far fa-question-circle"></i>
+        </a>
+    </div>
+</div>
+<div class="" style="display:none" id="search_help">
+    <p>
+        Here is a list of examples to using the search engine:<br />
+        character:aradia<br />
+        fandom:homestuck<br />
+        kink:futa<br />
+        artist:cerulean<br />
+        author:example_username<br />
+    </p>
 </div>
 <script>
     function search() {
@@ -122,7 +136,7 @@
     <meta name="twitter:site" content="@Quartz_" />
     <meta name="twitter:title" content="Quartz" />
     <meta name="twitter:description" content="Quartz. The next generation image board" />
-    <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/307615051689361408/480842001411997696/Screen_Shot_2018-08-19_at_01.00.48.png" />
+    <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/307615051689361408/484916791630495754/unknown.png" />
     {% endblock %}
 </head>
 <body>
@@ -136,13 +150,13 @@
             flex-flow: wrap;
         }
 
-        .image_container > img {
-            margin: 10px;
-            font-size: 0px;
-            cursor: pointer;
-            height: 200px;
-            width: auto;
-        }
+            .image_container > img {
+                margin: 10px;
+                font-size: 0px;
+                cursor: pointer;
+                height: 200px;
+                width: auto;
+            }
 
         html body {
             width: 100%;
@@ -150,8 +164,11 @@
         }
 
         .is-centered {
-            display:flex;justify-content:center;align-items:center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         .image_result {
             width: auto;
             max-height: 128px;
@@ -240,7 +257,7 @@
                 cookie_manager.set('enable_nsfw', '1', 14);
                 $('.blur_overlay').css('filter', '');
             }
-            
+
         }
     </script>
 
@@ -250,7 +267,7 @@
         <div class="container">
             <div class="navbar-brand">
                 <a class="navbar-item" href="/">
-                    <img src="/static/logo/new/logo_white.png" style="max-height:36px;"/>
+                    <img src="/static/logo/new/logo_white.png" style="max-height:36px;" />
                     <span style="font-size:1.3em;margin-left:5px;">QuartzBoard</span>
                 </a>
                 <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
@@ -278,7 +295,7 @@
                                 <a class="" href="https://www.patreon.com/quartz_"><img src="https://bulma.io/images/become-a-patron.png" /></a>
                             </p>
                             <p class="control">
-                                <a class="button" href="/profile"><img style="height:25px;width:auto;margin-right:5px;border-radius:8px;" src="/profile/{{user.userID}}/avatar"/> {{user.username}}</a>
+                                <a class="button" href="/profile"><img style="height:25px;width:auto;margin-right:5px;border-radius:8px;" src="/profile/{{user.userID}}/avatar" /> {{user.username}}</a>
                             </p>
                             <p class="control">
                                 <a class="button" href="/profile/upload">Upload</a>

@@ -121,6 +121,7 @@ class Utils():
 
 class DataBase:
     def __init__(self):
+        self.__version__ = '0.2.0 (Sapphire)'
         self.config = RecordObject(**config)
         
         self.db_connection = pymongo.MongoClient(self.config.mongoURI)
@@ -131,7 +132,6 @@ class DataBase:
         self.avatar_storage = gridfs.GridFS(self.db_connection.avatar_storage)
 
         session = boto3.session.Session()
-
         
         self.logger = logging.getLogger('quartz.database')
 
@@ -166,6 +166,15 @@ class DataBase:
                                      aws_secret_access_key=self.config.spaces.access_private)
 
         self.utils = Utils()
+        
+        self.flags = {} # this is different to config as flags are set dynamicly
+        # these are a set of items where functionality of the server can be toggled
+        # if a function of hte server requires a optional config, then the flag can be set if the config is there and ready
+
+        if not self.config.get('spaces') or not self.config.get('s3'):
+            self.flags['no_s3'] = True
+        else:
+            self.flags['no_s3'] = False
 
     def get_user(self, userID, search_by='userID', safe_mode=True):
         user = self.db.users.find_one({search_by: userID})
@@ -214,8 +223,7 @@ class DataBase:
         Does not work if the location on image_meta is set
         to S3
         """
-
-        return self.grid_storage.find_one(fileID).read()
+        return self.grid_storage.find_one({'_id': fileID}).read()
 
     def db_resp(self, resp):
         """
@@ -244,6 +252,16 @@ class DataBase:
             query = self.db.images.find({'tags': {'$all': tags}}).sort(sort_by, -1).skip(skips).limit(page_size)
 
         return list(query)
+
+    def count_images(self, tags):
+        """
+        Counts the images in the database with the tags
+        provided
+        """
+        tags = [str(x) for x in tags if x]
+
+        query = self.db.images.count({'tags': {'$all': tags}})
+        return query
 
     def delete_image(self, fileID):
         """

@@ -1,6 +1,106 @@
+import io
+import sys
+import threading
+from PIL import Image, ImageFont
 from .database import db
 
-def upload_image(image_bytes, fileID):
-    gridFS = db.grid_storage.new_file(_id=fileID)
+class ImageUtils():
+    def thumbnail(self, image, width=256):
+        bio = io.BytesIO()
+        img = Image.open(image)
 
-    gridFS.write(image_bytes)
+        # image resize logic here
+        wpercent = (width/float(img.size[0]))
+        hsize = int((float(img.size[1])*float(wpercent)))
+        img = img.resize((width,hsize), Image.ANTIALIAS)
+        # save the image and decode to bytes
+        img.save(bio, format='PNG')
+        bio.seek(0)
+        return bio
+
+    def upload(self, image_bytes, fileID, author, location='gridFS'):
+        # convert the incoming bytes to a file object
+        try:
+            try:
+                image_bytes.read
+            except:
+                image_bytes = io.BytesIO(image_bytes)
+
+            image_bytes.seek(0)
+
+            if db.flags['no_s3'] or location == 'gridFS':
+                # is if the S3 config is not present, we just use GridFS
+                # otherwise, check the location
+                location = 'gridFS'
+                with db.grid_storage.new_file(_id=fileID) as fp:
+                    fp.write(image_bytes)
+
+                db.logger.debug('Saving image {} to gridFS (no s3 config set)'.format(fileID))
+            else:
+            
+                self.spaces.put_object(ACL='public-read',
+                                        Bucket=db.config.spaces.bucket_name,
+                                        Body=image_bytes,
+                                        Key=str(author) + '/' + fileID + '.png',
+                                        ContentType='image/png')
+        finally:
+            image_bytes.close()
+
+
+
+    def upload_async(self, *args, **kwargs):
+        threading.Thread(None, target=self.upload, args=args, kwargs=kwargs).start()
+
+    def upload_to_quartz(self, image_bytes, fileID, author):
+        # first, we commit the image to the database
+        # this will allow us to access it for thumbnail creation
+        # inside a thread
+        try:
+            image_bytes.read
+        except:
+            image_bytes = io.BytesIO(image_bytes)
+
+        image_bytes.seek(0)
+
+        size = sys.getsizeof(image_bytes)
+
+        db.logger.debug('Image {} is {}MB'.format(fileID,
+                                                  size))
+        if size > (1 * 1024 * 1024): # 1MB
+            location = 'S3'
+        else:
+            location = 'gridFS'
+
+        # convert image to PNG
+        try:
+            img = Image.open(image_bytes)
+            width, height = img.size
+            bio = io.BytesIO()
+            img.save(bio, format='PNG')
+            bio.seek(0)
+
+            # upload to database
+            self.upload_async(bio, fileID, author, location=location)
+
+
+            # now we do the thumbnail
+            thumbnail = self.thumbnail(image_bytes, width=128) # only use the pixels that we are using for the home page
+            # step 1 of image optimisation: only the the data you need
+            # dont oversize the image if you do not plan to make the showing size bigger
+
+            self.upload_async(thumbnail, fileID + '_thumbnail', author, location=location)
+            db.logger.info('Saving image thumbnail {} to {}'.format(fileID, location))
+
+            # now we work out the flags of the database
+            db.db.images.update_one({'fileID': fileID}, {'$set': {'processing': False,
+                                                                  'location': location}})
+
+        finally:
+            image_bytes.close()
+            bio.close()
+
+    def get_rating(self, rating):
+        rating_2_external = {'e': 'Explicit',
+                             'm': 'Mature',
+                             None: 'Err'}
+        return rating_2_external[rating]

@@ -253,6 +253,44 @@ class DataBase:
 
         return list(query)
 
+    def search_images(self, tag_names=[], rating='any', author='any', sort_by='uploaded_at', page_number=1, page_size=20, count=False):
+        skips = page_size * (int(page_number ) - 1)
+        tags = []
+        for tag in tag_names:
+            if ':' not in tag:
+                tag_meta = self.db.tags.find({'internal_name': tag.lower()})
+            else:
+                type, name = tag.lower().split(':')
+                search_query = {'internal_name': name.lower(), 'type': type}
+                print(name)
+                if '(' in name and ')' in name and type == 'character':
+                    # we have a fandom to search by
+                    search_query['fandom_internal'] = name.split('(')[1].split(')')[0].lower()
+                    search_query['internal_name'] = name.split('(')[0]
+
+                tag_meta = self.db.tags.find(search_query)
+
+            for potential_tag in tag_meta:
+                tags.append(potential_tag['tagID'])
+
+        to_search = {'tags': {'$in': tags}}
+
+        if rating != 'any':
+            to_search['rating'] = rating
+
+        if author != 'any':
+            to_search['userID'] = str(author)
+
+        images = self.db.images.find(to_search).sort(sort_by, -1).skip(skips).limit(page_size)
+        number_images = 0
+        if count:
+            
+            number_images = self.db.images.count(to_search)
+
+        return {'images': images, 'search_query': to_search, 'evaluated_tags': tags, 'image_count': number_images}
+
+
+
     def count_images(self, tags):
         """
         Counts the images in the database with the tags
@@ -304,10 +342,8 @@ class DataBase:
         return self.db.tags.find().sort('searches', -1).limit(limit)
 
     def get_tag(self, tag, search_by='tagID'):
-        print(tag)
         if search_by == 'tagID':
             x = self.db.tags.find_one({'tagID': str(tag)})
-            print(x)
             return x
         else:
             return self.db.tags.find_one({search_by: tag})
@@ -365,10 +401,19 @@ class DataBase:
         return self.make_url_safe(''.join(output).encode().decode())
 
     def make_url_safe(self, string, safe=''):
-        illegal_chars = ["'",";",""]
+        illegal_chars = ["'",";","", "%", "#", "/", "?", "+", " "]
         for char in illegal_chars:
             string = string.replace(char, safe)
         return string
+
+    def make_internal_name(self, to_change):
+        """
+        Change the input string to fit the internal name scheme
+        aka, remove spaces, lower all characters
+        """
+        to_change = to_change.lower()
+        to_change = self.make_url_safe(to_change, safe='_').lower()
+        return to_change
 
     # permissions
     def get_role(self, roleID):

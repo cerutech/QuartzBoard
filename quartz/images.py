@@ -46,8 +46,6 @@ class ImageUtils():
         finally:
             image_bytes.close()
 
-
-
     def upload_async(self, *args, **kwargs):
         threading.Thread(None, target=self.upload, args=args, kwargs=kwargs).start()
 
@@ -96,9 +94,9 @@ class ImageUtils():
                                                                   'location': location}})
 
         finally:
-            image_bytes.close()
-            bio.close()
-
+            #image_bytes.close()
+            #bio.close()
+            pass
     def get_rating(self, rating):
         rating_2_external = {'e': 'Explicit',
                              'm': 'Mature',

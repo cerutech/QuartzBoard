@@ -43,6 +43,10 @@ def index():
     images = db.get_images(page_number=1, page_size=10)
     return flask.render_template('home.html', **locals())
 
+@app.route('/test')
+def test():
+    return flask.render_template('test.html', **locals())
+
 @app.route('/about')
 def about():
     return flask.render_template('about.html')
@@ -115,6 +119,10 @@ def utility_processor():
     else:
         if not flask.request.cookies.get('confirmed') and ('confirm' not in flask.request.url_rule.rule):
             pass
+    if 'debug' in flask.request.url:
+        flask.g.debug_req = True
+    else:
+        flask.g.debug_req = False
 
 @app.after_request
 def apply_caching(response):

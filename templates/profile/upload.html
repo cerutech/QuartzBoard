@@ -210,6 +210,7 @@
             method: 'POST',
             data: { 'tag_name': tag_name }
         }).done(function (data) {
+            $('#tag_add').removeClass('is-loading');
             if (data['success']) {
                 
                 if (data['multiple_choice']) {

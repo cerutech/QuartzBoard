@@ -40,13 +40,10 @@
     {% with author = db.get_user(image_meta.userID) %}
     <a href="/profile/{{author.userID}}"><b>Uploaded by: {{author.username}}</b></a>
 
-    <p class="tooltip is-info" data-tooltip="{{image_meta.uploaded_at}}"><b>Uploaded: {{time_to_human(image_meta.uploaded_at)}}</b></p>
+    <p><b>Uploaded: {{image_meta.uploaded_at}}</b></p>
     <p><b>Views: {{image_meta.views|length}}</b></p>
     <p><b>Source: {{image_meta.source or "No Source"}}</b></p>
     <p><b>Rating: {{image_utils.get_rating(image_meta.get("rating"))}}</b></p>
-    {% if g.debug_req %}
-    <p><b>Storage Location: {{image_meta.location}}</b></p>
-    {% endif %}
     <hr />
     {% if author.get('sidebar').content %}
     <h1 class="subtitle">About The Author</h1>
@@ -69,9 +66,7 @@
 {% with author = get_user(image_meta['userID']) %}
 <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
     <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'"/>
-    
 </div>
-<p>Click for full image</p>
 <hr />
 <div class="box">
     <h1 class="subtitle">Comments</h1>

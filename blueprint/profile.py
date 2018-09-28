@@ -4,6 +4,7 @@ import flask
 import secrets
 import threading
 import humanize
+import tempfile
 from quartz import auth, image_utils
 from datetime import datetime
 from PIL import Image
@@ -50,7 +51,6 @@ def upload_image():
 
         db.db.images.insert_one(new_image)
         author = flask.g.user['userID']
-
         image_utils.upload_to_quartz(image.stream.read(), fileID, author)
 
 
@@ -113,7 +113,7 @@ def get_avatar(userID):
 @auth.require(needs=['upload_avatar'])
 def upload_new_avatar():
     new_avatar = flask.request.files['avatar']
-    avatar_small = make_thumbnail(new_avatar.stream, size=(256, 256))
+    avatar_small = image_utils.thumbnail(new_avatar.stream, width=256)
     # db exists returns false for all attemtps to check
     db.avatar_storage.delete(flask.g.user['userID'])
     with db.avatar_storage.new_file(_id=str(flask.g.user['userID'])) as fp:

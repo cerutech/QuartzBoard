@@ -3,7 +3,7 @@ import flask
 import secrets
 import requests
 import threading
-from quartz import auth
+from quartz import auth, image_utils
 from datetime import datetime
 from PIL import Image, ImageFont
 from server import db
@@ -158,7 +158,7 @@ def show_image_thumbnail(fileID):
             db.db.images.remove({'fileID': fileID})
             file = generate_error_image(404)
     else:
-        return flask.redirect(db.base_url + str(image_meta['userID']) + '/' + fileID + '_thumb' + '.png')
+        return flask.redirect(db.base_url + str(image_meta['userID']) + '/' + fileID + '_thumbnail' + '.png')
 
     return flask.send_file(io.BytesIO(file),
                            mimetype='image/png')
@@ -189,7 +189,7 @@ def get_tag():
 @image_api.route('/api/tags/create', methods=['POST'])
 def create_tag():
     data = flask.request.form
-    tag_meta = db.db.tags.find_one({'name': data['tag_name']})
+    tag_meta = db.db.tags.find_one({'internal_name': db.make_internal_name(data['tag_name'])})
 
     if not data['tag_name']:
         return flask.jsonify({'success':False, 'msg': 'Tag name is missing'})
@@ -202,13 +202,13 @@ def create_tag():
         if tag_meta['name'] == data['tag_name'] and tag_meta['type'] == data['type']:
             # check if type is character and fandom is not the same
             if tag_meta['type'] == 'character':
-                print(tag_meta.get('fandom'), data.get('fandom'))
                 if tag_meta.get('fandom_internal') and db.make_internal_name(data.get('fandom', ' ')):
                     if tag_meta.get('fandom') != data.get('fandom'):
                         bypass = True
                     else:
                         # if the tag is not type:character and fandom is not the same
                         return flask.jsonify({'success': False, 'msg': 'Tag already exists'})
+
             if not bypass:
                 return flask.jsonify({'success': False, 'msg': 'Tag already exists'})
 

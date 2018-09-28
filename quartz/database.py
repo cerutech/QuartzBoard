@@ -157,7 +157,8 @@ class DataBase:
         # file storage
 
         # is interchangable with S3
-        self.base_url = 'https://{}.nyc3.digitaloceanspaces.com/'.format(self.config.spaces.bucket_name)
+
+        self.base_url = 'https://{}.nyc3.cdn.digitaloceanspaces.com/'.format(self.config.spaces.bucket_name)
 
         self.spaces = session.client('s3',
                                      region_name='nyc3',
@@ -171,7 +172,7 @@ class DataBase:
         # these are a set of items where functionality of the server can be toggled
         # if a function of hte server requires a optional config, then the flag can be set if the config is there and ready
 
-        if not self.config.get('spaces') or not self.config.get('s3'):
+        if not self.config.get('spaces'):
             self.flags['no_s3'] = True
         else:
             self.flags['no_s3'] = False

@@ -6,6 +6,12 @@ from .database import db
 
 class ImageUtils():
     def thumbnail(self, image, width=256):
+        """
+        Generate thumbnail from a raw image
+
+        Returns BytesIO object
+        (Easier for the API to deal with)
+        """
         bio = io.BytesIO()
         img = Image.open(image)
 
@@ -19,7 +25,9 @@ class ImageUtils():
         return bio
 
     def upload(self, image_bytes, fileID, author, location='gridFS'):
-        # convert the incoming bytes to a file object
+        """
+        Uploads the image bytes to the CDN defined in location.
+        """
         try:
             try:
                 image_bytes.read
@@ -36,13 +44,17 @@ class ImageUtils():
                     fp.write(image_bytes)
 
                 db.logger.debug('Saving image {} to gridFS (no s3 config set)'.format(fileID))
+
+            elif location == 's3':
+                db.spaces.put_object(ACL='public-read',
+                                     Bucket=db.config.spaces.bucket_name,
+                                     Body=image_bytes,
+                                     Key=str(author) + '/' + fileID + '.png',
+                                     ContentType='image/png')
+                db.logger.debug('Saving image {} to S3'.format(fileID))
             else:
-            
-                self.spaces.put_object(ACL='public-read',
-                                        Bucket=db.config.spaces.bucket_name,
-                                        Body=image_bytes,
-                                        Key=str(author) + '/' + fileID + '.png',
-                                        ContentType='image/png')
+                raise TypeError('Location does not exist!!')
+
         finally:
             image_bytes.close()
 
@@ -50,6 +62,14 @@ class ImageUtils():
         threading.Thread(None, target=self.upload, args=args, kwargs=kwargs).start()
 
     def upload_to_quartz(self, image_bytes, fileID, author):
+        """
+        Upload the image bytes to QuartzBoard.
+        This is different to self.upload as this function will
+        automagicly create the thumbnail and any other metadata required
+        for viewing in QuartzBoard. 
+
+        If the size is more than 1mb, the server will try to upload to the S3 CDN.
+        """
         # first, we commit the image to the database
         # this will allow us to access it for thumbnail creation
         # inside a thread
@@ -69,6 +89,10 @@ class ImageUtils():
         else:
             location = 'gridFS'
 
+        if db.config.get('force_location'):
+            # allow for force location setting
+            location = db.config.get('force_location', 'gridFS')
+
         # convert image to PNG
         try:
             img = Image.open(image_bytes)
@@ -79,7 +103,6 @@ class ImageUtils():
 
             # upload to database
             self.upload_async(bio, fileID, author, location=location)
-
 
             # now we do the thumbnail
             thumbnail = self.thumbnail(image_bytes, width=128) # only use the pixels that we are using for the home page
@@ -96,9 +119,15 @@ class ImageUtils():
         finally:
             #image_bytes.close()
             #bio.close()
+            # image objects are closed inside the thread.
+            # Dont ask me how they reach this scope but when i try to close, they are already closed so
+            # i presume it worked???
+            # lmao, pythons weird sometimes
             pass
+
     def get_rating(self, rating):
         rating_2_external = {'e': 'Explicit',
                              'm': 'Mature',
-                             None: 'Err'}
+                             None: 'Err', # default for any images that were created before i added this system
+                             }
         return rating_2_external[rating]

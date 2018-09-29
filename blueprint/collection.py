@@ -41,7 +41,8 @@ def create_new_collection():
         if db.db.collections.find_one({'userID': flask.g.user['userID'],
                                     'title': data['title']}):
             flask.flash('You already have a collection with that name', 'is-error')
-            return flask.redirect('/dashboard')
+            return flask.redirect('/profile')
+
         id = db.make_id()
         new_collection = {'collectionID': id,
                           'userID': flask.g.user['userID'],

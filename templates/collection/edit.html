@@ -54,6 +54,9 @@
                 $("#image_list").sortable({
                     animation: 200,
                     axis: 'y',
+                    receive: function (event, ui) { // add this handler
+                        ui.item.remove(); // remove original item
+                    },
                     placeholder: {
                         element: function (currentItem) {
                             return $("<div class='notification is-warning is-small'>Image will go here</div>")[0];

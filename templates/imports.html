@@ -209,6 +209,9 @@
             display: inline-block;
             text-align: center;
             vertical-align: middle;
+            overflow: hidden;
+            margin: 3px;
+            cursor:pointer;
         }
 
         .smut.img > img {
@@ -216,7 +219,13 @@
             height:auto;
             cursor:pointer;
         }
-
+        @media only screen and (max-width: 1000px) {
+            .mobile_flip {
+                flex-flow: column-reverse;
+                flex: auto;
+                display: flex;
+            }
+        }
     </style>
     <script>
         function open_image(imageID) {
@@ -342,7 +351,7 @@
         </div>
     </nav>
     {% endblock %}
-    <div class="columns" style="margin:0 2em;">
+    <div class="columns mobile_flip" style="margin:0 2em;">
         {% block sidebar %}
         <div class="column is-3">
             {{search_bar(tags)}}

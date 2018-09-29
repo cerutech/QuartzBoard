@@ -6,24 +6,6 @@ import logging
 
 admin_api = flask.Blueprint(__name__, 'admin')
 
-def has_no_empty_params(rule):
-    defaults = rule.defaults if rule.defaults is not None else ()
-    arguments = rule.arguments if rule.arguments is not None else ()
-    return len(defaults) >= len(arguments)
-
-
-@admin_api.route("/admin/site_map")
-def site_map():
-    links = []
-    for rule in flask.current_app.url_map.iter_rules():
-        # Filter out rules we can't navigate to in a browser
-        # and rules that require parameters
-        if "GET" in rule.methods and has_no_empty_params(rule):
-            url = flask.url_for(rule.endpoint, **(rule.defaults or {}))
-            links.append((url, rule.endpoint))
-
-    print(links)
-
 # ROLE SYSTEM
 @admin_api.route('/admin/roles')
 @auth.require(needs=['edit_roles'])

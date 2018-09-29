@@ -16,10 +16,13 @@ class Auth():
                     return flask.redirect('/login')
 
                 role = user['role']
-                image_meta = {}
+                object_meta = {}
                 if 'fileID' in kwargs:
-                    image_meta = db.db.images.find_one({'fileID': kwargs.get('fileID')})
-                    
+                    object_meta = db.db.images.find_one({'fileID': kwargs.get('fileID')})
+
+                if 'collectionID' in kwargs:
+                    object_meta = db.db.collections.find_one({'collectionID': kwargs['collectionID']})
+
                 if needs:
                     for need in needs:
                         if '|' in need:
@@ -30,8 +33,8 @@ class Auth():
 
                                 return self.perm_error(need, error=error.format(**locals()))
 
-                        if image_meta:
-                            if str(image_meta['userID']) != str(user['userID']):
+                        if object_meta:
+                            if str(object_meta['userID']) != str(user['userID']):
                                 if not role.has(need):
                                     # if the current role does not have delete_image
                                     # but the owner is the one listed. let the owner have full permissions

@@ -17,7 +17,9 @@ profile_api = flask.Blueprint(__name__, 'profile')
 @profile_api.route('/profile')
 @auth.require()
 def profile():
-    return flask.render_template('profile/dashboard.html')
+    collections = list(db.db.collections.find({'userID': flask.g.user['userID']}))
+
+    return flask.render_template('profile/dashboard.html', **locals())
 
 @profile_api.route('/profile/upload', methods=['GET','POST'])
 @auth.require(needs=['create_image']) # require the create_image permission

@@ -1,0 +1,55 @@
+{% extends 'imports.html' %}
+{% block head %}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@Quartz_" />
+<meta name="twitter:title" content="{{collection.title or 'Quartz Collection'}}" />
+<meta name="twitter:description" content="A collection of very cool content on QuartzBoard!" />
+<meta name="twitter:image" content="/api/image/{{collection.images[0]}}" />
+{% endblock %}
+{% block content %}
+{% with author = get_user(collection['userID']) %}
+<nav class="level">
+    <!-- Left side -->
+    <div class="level-left">
+        <div class="level-item">
+            <p class="subtitle is-5">
+                <b>{{collection.title}}</b> | <strong>{{collection.images|length}}</strong> image{% if collection.images|length > 1 %}s{% endif %}
+            </p>
+        </div>
+        <div class="level-item">
+            <div class="control has-icons-left">
+                <div class="select">
+                    <select>
+                        <option>English</option>
+                        <option>Japanese</option>
+                    </select>
+                </div>
+                <span class="icon is-left">
+                    <i class="fas fa-globe"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right side -->
+    <div class="level-right">
+        {% if page != 0 %}
+        <a class="level-item button" href="/collection/{{collection.collectionID}}?page={{page - 1}}">Previous</a>
+        {% endif %}
+        {% if page + 1 != collection.images|length %}
+        <a class="level-item button" href="/collection/{{collection.collectionID}}?page={{page + 1}}">Next</a>
+        {% endif %}
+    </div>
+</nav>
+<hr />
+<div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
+
+    {% for img in collection.images %}
+    <div class="smut thumbnail">
+        <img src="/api/image/{{img}}/thumbnail"/>
+    </div>
+    {% endfor %}
+    
+</div>
+{% endwith %}
+{% endblock %}

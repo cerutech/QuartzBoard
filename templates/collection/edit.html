@@ -1,0 +1,157 @@
+{% extends 'imports.html' %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="box">
+    <h1 class="title">Editing {{collection.title}}</h1>
+    <nav class="level is-mobile">
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Views</p>
+                <p class="title">{{collection.views|length}}</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Likes</p>
+                <p class="title">{{collection.likes|length}}</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Images</p>
+                <p class="title">{{collection.images|length}}</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Delete?</p>
+                <a class="button is-danger">Delete This Collection</a>
+            </div>
+        </div>
+    </nav>
+</div>
+<div class="box">
+    <form action="/api/collection/{{collection.collectionID}}/edit" method="post">
+        <div class="field">
+            <label class="label">Title</label>
+            <div class="control">
+                <input class="input" type="text" name="title" placeholder="Title" value="{{collection.title}}">
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">Language</label>
+            <div class="control">
+                <input class="input" type="text" name="language" placeholder="Language" value="{{collection.language}}">
+            </div>
+            <p class="help">This is so that if you are creating a comic, you can set the language</p>
+        </div>
+        <!-- Image selector here -->
+        <script>
+            $(document).ready(function () {
+                $("#image_list").sortable({
+                    animation: 200,
+                    axis: 'y',
+                    placeholder: {
+                        element: function (currentItem) {
+                            return $("<div class='notification is-warning is-small'>Image will go here</div>")[0];
+                        },
+                        update: function (container, p) {
+                            return;
+                        }
+                    },
+                    over: function (event, ui) {
+                        var cl = ui.item.attr('class');
+                        $('.placeholder').addClass(cl);
+                    },
+                    stop: function (event, ui) {
+                        $(ui.item).find('.delete').css('display', 'block')
+                        $(ui.item).find('.delete').click(function () {
+                            $(ui.item).remove()
+                        })
+                    }
+
+                });
+                $(".draggable").draggable({
+                    connectToSortable: '#image_list',
+                    cursor: 'pointer',
+                    helper: 'clone',
+                    opacity: 0.6,
+                    revert: 'invalid'
+                });
+                
+            });
+        </script>
+        <h1 class="title is-3">Images</h1>
+        <h2 class="subtitle is-5">Drag and drop your uploads from the sidebar</h2>
+        <div class="columns" style="">
+            <style>
+                .image_editor_list {
+                    height: 300px;
+                    overflow-y: scroll;
+                    position: relative;
+                }
+                .draggable.item {
+                    width: 128px;
+                    height: auto;
+                    margin: auto;
+                    margin-bottom: 20px;
+                    position:relative;
+
+                }
+            </style>
+            <script>
+                window.showing_more = false;
+                function toggle_show() {
+                    if (window.showing_more) {
+                        $('.image_editor_list').css('height', '300px');
+                        window.showing_more = false
+                    } else {
+                        $('.image_editor_list').css('height', '700px');
+                        window.showing_more = true
+                    }
+                    
+                }
+                function send_form() {
+                    var files = []
+                    $('#image_list').children('div').each(function () {
+                        files.push($(this).attr('data-fileID'))
+                    });
+                    if (!files) {
+                        show_notification('You have not added any images', 'is-danger');
+                        return
+                    }
+                    $('#fileIDs').val(files.join(','))
+                }
+            </script>
+            <div class="column image_editor_list" style="">
+                <p><b>Collection's Images</b></p>
+                <div id="image_list" style="border: 2px dashed grey;padding:2em;">
+                    {% for image in collection.images %}
+                    <div class="draggable item" data-fileID="{{image}}">
+                        <img class="image" src="/api/image/{{image}}/thumbnail" />
+                        <a class="delete" onclick="$(this).parent().remove()"></a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="column image_editor_list">
+                <p><b>Your Uploads</b></p>
+                {% for image in user_images %}
+                <div class="draggable item" data-fileID="{{image.fileID}}">
+                    <img class="image" src="/api/image/{{image.fileID}}/thumbnail" style="" />
+                    <a class="delete" style="display:none;"></a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <a onclick="toggle_show()" class="button is-info">Toggle Size</a>
+        <input id="fileIDs" name="images"/>
+        <br />
+        <br />
+        <button class="button is-info" style="margin:auto;" onclick="send_form()">Edit</button>
+    </form>
+</div>
+{% endblock %}

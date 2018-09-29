@@ -2,7 +2,7 @@
 {% block head %}
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@Quartz_" />
-<meta name="twitter:title" content="{{image_meta.title or 'Quartz Image'}}" />
+<meta name="twitter:title" content="{{collection.title or 'Quartz Collection'}}" />
 <meta name="twitter:description" content="{{db.get_tags_string(image_meta.tags)}}" />
 <meta name="twitter:image" content="/api/image/{{image_meta.fileID}}" />
 {% endblock %}
@@ -47,13 +47,6 @@
     {% if g.debug_req %}
     <p><b>Storage Location: {{image_meta.location}}</b></p>
     {% endif %}
-    {% if collections %}
-    <hr />
-    <h1 class="subtitle is-5">Collections</h1>
-    {% for collection in collections %}
-    <a href="/collection/{{collection.collectionID}}?goto_page={{image_meta.fileID}}">{{collection.title}}</a><br />
-    {% endfor %}
-    {% endif %}
     <hr />
     {% if author.get('sidebar').content %}
     <h1 class="subtitle">About The Author</h1>
@@ -62,7 +55,6 @@
     </div>
     {% endif %}
     {% endwith %}
-
 
     {% if is_logged_in %}
     {% if user.role.has("delete_image") %}
@@ -74,8 +66,48 @@
 {% endblock %}
 {% block content %}
 {% with author = get_user(image_meta['userID']) %}
+<nav class="level">
+    <!-- Left side -->
+    <div class="level-left">
+        <div class="level-item">
+            <p class="subtitle is-5">
+                <b>{{collection.title}}</b> | <strong>{{collection.images|length}}</strong> image{% if collection.images|length > 1 %}s{% endif %}
+            </p>
+        </div>
+        <div class="level-item">
+            <div class="control has-icons-left">
+                <div class="select">
+                    <select>
+                        <option>English</option>
+                        <option>Japanese</option>
+                    </select>
+                </div>
+                <span class="icon is-left">
+                    <i class="fas fa-globe"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right side -->
+    <div class="level-right">
+        <div class="level-item">
+            <p class="subtitle is-5">
+                <b>Page {{page}}</b>
+            </p>
+        </div>
+        {% if page != 0 %}
+        <a class="level-item button" href="/collection/{{collection.collectionID}}?page={{page - 1}}">Previous</a>
+        {% endif %}
+        {% if page + 1 != collection.images|length %}
+        <a class="level-item button" href="/collection/{{collection.collectionID}}?page={{page + 1}}">Next</a>
+        {% endif %}
+    </div>
+</nav>
+<hr />
 <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image smut" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'"/>
+    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'"/>
+    
 </div>
 <p>Click for full image</p>
 <hr />

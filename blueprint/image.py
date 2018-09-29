@@ -92,6 +92,7 @@ def show_image(fileID):
         return flask.render_template('errors/404.html', error='The requested image does not exist')
 
     image_views = db.set_image_views(fileID, flask.request.remote_addr)
+    collections = list(db.db.collections.find({'images': {'$all': [fileID]}}))
 
     return flask.render_template('image/show.html', **locals())
 

@@ -102,7 +102,7 @@ class ImageUtils():
             bio.seek(0)
 
             # upload to database
-            self.upload_async(bio, fileID, author, location=location)
+            self.upload(bio, fileID, author, location=location)
 
             # now we do the thumbnail
             thumbnail = self.thumbnail(image_bytes, width=128) # only use the pixels that we are using for the home page

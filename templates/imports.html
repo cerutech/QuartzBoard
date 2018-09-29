@@ -128,8 +128,11 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.9/jquery.lazy.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.9/jquery.lazy.plugins.min.js"></script>
     <script src="/static/js/cookie_manager.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-tooltip@2.0.2/dist/css/bulma-tooltip.min.css"/>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-tooltip@2.0.2/dist/css/bulma-tooltip.min.css" />
     {% block head %}
     {% endblock %}
     {% block meta %}
@@ -199,6 +202,21 @@
             margin-left: 0;
             position: relative
         }
+        .smut.thumbnail {
+            height: 195px;
+            width: 180px;
+            position: relative;
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .smut.img > img {
+            width:100%;
+            height:auto;
+            cursor:pointer;
+        }
+
     </style>
     <script>
         function open_image(imageID) {
@@ -216,6 +234,7 @@
             }, 4000)
         }
         $(document).ready(function () {
+            $('.smut').lazy({animation:'fadeIn'});
 
             // Check for click events on the navbar burger icon
             $(".navbar-burger").click(function () {

@@ -92,7 +92,7 @@ def show_image(fileID):
         return flask.render_template('errors/404.html', error='The requested image does not exist')
 
     image_views = db.set_image_views(fileID, flask.request.remote_addr)
-    collections = list(db.db.collections.find({'images': {'$all': [fileID]}}))
+    collection = db.db.collections.find_one({'images': {'$all': [fileID]}})
 
     return flask.render_template('image/show.html', **locals())
 
@@ -134,14 +134,12 @@ def get_image(fileID):
     else:
         url = db.base_url + str(image_meta['userID']) + '/' + fileID + '.png'
         resp = requests.head(url)
-        logging.error(resp.status_code)
         if resp.status_code == 200:
             return flask.redirect(url)
         else:
             # file is missing from S3 storage
             # mark as private
             db.db.images.update_one({'fileID': fileID}, {'$set': {'status': 'private'}})
-
 
     return flask.send_file(io.BytesIO(file),
                            mimetype='image/png')

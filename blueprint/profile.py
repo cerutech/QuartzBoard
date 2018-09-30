@@ -39,6 +39,7 @@ def upload_image():
         #if not image_bytes:
         #    return flask.redirect('/profile/upload')
         tags_used = [str(x) for x in data['tags'].split(',')]
+        print(tags_used)
 
         new_image = {'userID': flask.g.user['userID'],
                      'filename': secure_filename(image.filename),
@@ -117,7 +118,7 @@ def upload_new_avatar():
     new_avatar = flask.request.files['avatar']
     avatar_small = image_utils.thumbnail(new_avatar.stream, width=256)
     # db exists returns false for all attemtps to check
-    db.avatar_storage.delete(flask.g.user['userID'])
+    db.avatar_storage.delete(str(flask.g.user['userID']))
     with db.avatar_storage.new_file(_id=str(flask.g.user['userID'])) as fp:
         fp.write(avatar_small.read())
 

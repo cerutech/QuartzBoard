@@ -1,0 +1,6 @@
+{
+  "secret_key": "RANDOM_STRING",
+  "developer_mode": true,
+  "mongoURI": "MONGO_URL",
+  "ownerID": "YOUR_ID"
+}

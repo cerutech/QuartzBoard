@@ -159,23 +159,14 @@ if __name__ == '__main__':
     from blueprint.profile import profile_api
     from blueprint.image import image_api
     from blueprint.collection import collection_api
+    from blueprint.mass_upload import mass_upload_api
     from blueprint.admin import admin_api
-
-    
-
-    def get_bp_urls(blueprint):
-        from flask import Flask
-        temp_app = Flask(__name__) 
-        temp_app.register_blueprint(blueprint)
-        return [str(p) for p in temp_app.url_map.iter_rules()]
-
-    r = get_bp_urls(collection_api)
-    print(r)
 
     app.register_blueprint(auth_api)
     app.register_blueprint(profile_api)
     app.register_blueprint(image_api)
     app.register_blueprint(collection_api)
+    app.register_blueprint(mass_upload_api)
     app.register_blueprint(admin_api)
-    print([str(p) for p in app.url_map.iter_rules() if 'collection' in str(p)])
+
     app.run('0.0.0.0', db.config.get('port', 8081), threaded=True)

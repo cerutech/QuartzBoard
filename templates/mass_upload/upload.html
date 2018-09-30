@@ -1,4 +1,7 @@
 ﻿{% extends 'imports.html' %}
+{% block head %}
+<script src="/static/js/humanize.js"></script>
+{% endblock %}
 {% block content %}
 
 <div class="modal">
@@ -187,21 +190,21 @@
             $('.type').addClass('is-hidden');
             $('.option_' + this.value).removeClass('is-hidden');
         })
-
+        $('.new_tag_confirm').click(function () {
+            $.ajax({
+                url: '/api/tags/create',
+                method: 'POST',
+                data: $('#new_tag_form').serialize()
+            }).done(function (resp) {
+                if (resp['success']) {
+                    window.tags.push(resp['tag']);
+                    render_tags();
+                }
+            })
+        })
         $('.modal').addClass('is-active');
     }
-    $('.new_tag_confirm').click(function () {
-        $.ajax({
-            url: '/api/tags/create',
-            method: 'POST',
-            data: $('#new_tag_form').serialize()
-        }).done(function (resp) {
-            if (resp['success']) {
-                window.tags.push(resp['tag']);
-                render_tags();
-            }
-        })
-    })
+
     function add_tag_to_server() {
         var tag_name = $('#tag_name').val();
         $('#tag_add').addClass('is-loading');
@@ -212,7 +215,7 @@
         }).done(function (data) {
             $('#tag_add').removeClass('is-loading');
             if (data['success']) {
-
+                
                 if (data['multiple_choice']) {
                     $('#multiple_choice').html(data['html'])
                 } else {
@@ -267,10 +270,10 @@
     function show_more() {
         if (window.is_showing_more) {
             window.is_showing_more = false;
-            $('.top_image_holder').animate({ 'height': '-=225px' });
+            $('.top_image_holder').animate({ 'height': '-=725px' });
         } else {
             window.is_showing_more = true;
-            $('.top_image_holder').animate({ 'height': '+=225px' });
+            $('.top_image_holder').animate({ 'height': '+=725px' });
         }
 
     }
@@ -279,9 +282,10 @@
     show_notification('You must agree to the terms before uploading', 'is-error')
     {% endif %}
 </script>
-<div class="top_image_holder box" style="display:none;">
-    <img src="" id="new_image_holder"/>
-    <h1 class="subtitle" id="new_image_blury" style="display:none;margin-bottom:0;margin-top:1em;">Heads up! This image may be blury when shown to users with larger screens!</h1>
+<p class="title is-4">Preview</p>
+<div class="top_image_holder box" style="overflow-y:scroll;display:flex;flex-flow:wrap;height:250px">
+    
+    <h1 class="title has-text-centered is-4 is-info" id="no_img_warn">No Images Selected</h1>
     <div class="options_list">
         <a onclick="show_more()" style="font-size:2em;"><i class="fas fa-search"></i></a>
     </div>
@@ -290,27 +294,29 @@
     </div>
 </div>
 <div class="box">
-    <h1 class="title">Upload</h1>
-    <h2 class="subtitle">Upload a new image for the world to enjoy!</h2>
-    
+    <h1 class="title">Bulk Upload</h1>
+    <h2 class="subtitle">Upload a new collection for the world to enjoy!</h2>
     <form method="post" enctype="multipart/form-data" id="new_image_form">
-        <div class="field is-centered" style="">
+        <div class="field is-centered" style="flex-flow:column">
             <div class="file has-name">
                 <label class="file-label">
-                    <input class="file-input" type="file" name="image" id="upload" required>
+                    <input class="file-input" type="file" name="images" id="upload" required multiple>
                     <span class="file-cta">
                         <span class="file-icon">
                             <i class="fas fa-upload"></i>
                         </span>
                         <span class="file-label">
-                            Choose a file…
+                            Choose more than 1 file...
                         </span>
+
                     </span>
-                    <span class="file-name" id="filename">
-                        No file
+                    <span class="file-name">
+                        Images only. No GIF's or WEBM's for now
                     </span>
                 </label>
             </div>
+            <br />
+            <p id="file_size"></p>
         </div>
         <div class="field is-horizontal">
             <div class="field-body">
@@ -318,7 +324,7 @@
                     <p class="control is-expanded">
                         <label class="label">Source URL</label>
                         <input class="input" name="source" type="text" placeholder="Source URL">
-                        <span class="help"></span>
+                        <span class="help">If you have muiltiple sources, you can manually set them in the image's edit page!</span>
                     </p>
                 </div>
                 <div class="field">
@@ -361,7 +367,6 @@
                 </div>
             </div>
             <div id="multiple_choice">
-
             </div>
             <div class="field is-grouped is-grouped-multiline tag_holder">
 
@@ -382,34 +387,70 @@
             });
             window.addEventListener('load', function () {
                 document.querySelector('input[type="file"]').addEventListener('change', function () {
-                    if (this.files && this.files[0]) {
-                        $('#new_image_blury').css('display', 'none')
-                        var img = $('.top_image_holder > img')[0];
-                        console.log(img)
-                        img.src = URL.createObjectURL(this.files[0]); // set src to file url
-                        img.onload = function () {
-                            $('.top_image_holder').css('display', 'flex');
-                            $('.overlay').removeClass('is-hidden');
-                            $('.overlay > svg').addClass('checkmark');
-                            setTimeout(function () { $('.overlay').fadeOut(); }, 1700)
-                            if (this.naturalWidth < 250) {
-                                // image might be blury
-                                $('#new_image_blury').css('display', 'block')
+                    var total_size = 0;
+                    $('.smut.thumbnail').remove();
+                    var total_images = 0;
+                    if (this.files) {
+                        $('#no_img_warn').css('display', 'none');
+                        for (var i in this.files) {
+                            if (total_images == 20) {
+                                show_notification('Max 20 images per bulk upload. We\'re sorry :c', 'is-danger')
+                            } else {
+                                total_images += 1;
+
+                                var file = this.files[i];
+
+                                $('#new_image_blury').css('display', 'none')
+                                var obj = $('<div class="smut thumbnail"><img /></div>');
+                                var img = $(obj).find('img')[0];
+                                var is_valid = true;
+                                try {
+                                    $(img).attr('src', URL.createObjectURL(file))// = ; // set src to file url
+                                } catch (e) {
+                                    is_valid = false;
+
+                                }
+                                if (is_valid) {
+                                    total_size = total_size + file.size
+                                    console.log(obj)
+                                    $('.top_image_holder').append(obj);
+                                    img.onload = function () {
+                                        $('.top_image_holder').css('display', 'flex');
+                                        $('.overlay').removeClass('is-hidden');
+                                        $('.overlay > svg').addClass('checkmark');
+                                        setTimeout(function () { $('.overlay').fadeOut(); }, 1700)
+                                        if (this.naturalWidth < 250) {
+                                            // image might be blury
+                                            $('#new_image_blury').css('display', 'block')
+                                        }
+                                    }
+                                    //$('.top_image_holder').append(img);
+                                }
                             }
                         }
+                        $('#file_size').text(Humanize.fileSize(total_size))
                     }
                 });
             });
-
         </script>
+        <div class="field">
+            <label class="label">Collection - {{user_collections|length}} Available</label>
+            <div class="select">
+                <select name="collection">
+                    <option selected value="dont">Dont Import</option>
+                    {% for collection in user_collections %}
+                    <option value="{{collection.collectionID}}">{{collection.title}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <p class="help">This will automaticly import into the collection.</p>
+        </div>
         <hr />
         <label class="checkbox">
             <input type="checkbox" name="terms" required>
-            I agree that my image does not break any of the rules inside QuartzBoard's <a href="/terms">terms of service</a>.
+            I agree that none of my images break the rules inside of QuartzBoard's <a href="/terms">terms of service</a>.
         </label>
-
-        <br /><br /><button class="button is-success" id="submit_form">Upload</button><br />
-        <a href="/upload/bulk">Have more than 1 image? Try uploading via the bulk uploader!</a>
+        <br /><br /><button class="button is-success" id="submit_form">Upload All!</button>
     </form>
     <script>
         $('#submit_form').click(function () {

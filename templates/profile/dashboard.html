@@ -69,6 +69,10 @@
                 </div>
             </div>
         </div>
+        <div class="">
+            <p>Placeholder</p>
+        </div>
+
     </div>
     <div class="tab" data-tab="dash_permissions">
         <p>Here are your permissions. If you wish to have a special role that enables you to do an action, please contact the site owner/moderation team inorder to get a role</p>
@@ -109,6 +113,7 @@
             </div>
         </div>
         {% endmacro %}
+
         {% if collections %}
         {% for collection in collections %}
         <article class="media" style="cursor:pointer;" onclick="window.location = '/collection/{{collection.collectionID}}'">
@@ -159,29 +164,31 @@
         <a class="button" href="/profile/upload">Upload</a>
         {% else %}
         {% for image in user_images %}
-        <div class="" style="display:flex;flex-flow:row">
-            <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail" style="max-height:150px;width:auto;max-width:200px;">
-            <div style="margin-left:1em;">
-                <h2 class="title is-4" style="margin:0;">{{image.title}}</h2>
-                {{tag_list(image.tags)}}
-                <br />
-                <p class="field">
-                    <a class="button is-info">
-                        <span class="icon is-small">
-                            <i class="fa fa-pencil-alt"> </i>
-                        </span>
-                        <span> Edit </span>
-                    </a>
-                    <a class="button is-danger is-outlined" onclick="delete_image('{{image.fileID}}')">
-                        <span> Delete </span>
-                        <span class="icon is-small">
-                            <i class="fa fa-times"> </i>
-                        </span>
-                    </a>
-                </p>
+        <div class="image_">
+            <div class="" style="display:flex;flex-flow:row">
+                <img class="image" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail" style="max-height:150px;width:auto;max-width:200px;">
+                <div style="margin-left:1em;">
+                    <h2 class="title is-4" style="margin:0;">{{image.title}}</h2>
+                    {{tag_list(image.tags)}}
+                    <br />
+                    <p class="field">
+                        <a class="button is-info">
+                            <span class="icon is-small">
+                                <i class="fa fa-pencil-alt"> </i>
+                            </span>
+                            <span> Edit </span>
+                        </a>
+                        <a class="button is-danger is-outlined" onclick="delete_image('{{image.fileID}}');$(this).parents('.image_').remove()">
+                            <span> Delete </span>
+                            <span class="icon is-small">
+                                <i class="fa fa-times"> </i>
+                            </span>
+                        </a>
+                    </p>
+                </div>
             </div>
+            <br />
         </div>
-        <br />
         {% endfor %}
         {% endif %}
         {% endwith %}
@@ -279,6 +286,9 @@
                 $('#filename').text(filename);
             });
         </script>
+        <hr />
+        <p class="">User Information</p>
+        <p>ID: {{g.user.userID}}</p>
     </div>
 </div>
 {% endblock %}

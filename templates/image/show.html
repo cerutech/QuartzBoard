@@ -33,7 +33,13 @@
     </script>
 
     <div style="display:flex;flex-flow:column">
+        {% if image_meta.tags %}
         {{ tag_list(image_meta.tags, column=True) }}
+        {% else %}
+        <div class="notification is-danger">
+            No tags selected
+        </div>
+        {% endif %}
     </div>
     <hr />
     <h1 class="subtitle is-5">Info</h1>
@@ -47,15 +53,11 @@
     {% if g.debug_req %}
     <p><b>Storage Location: {{image_meta.location}}</b></p>
     {% endif %}
-    {% if collections %}
-    <hr />
-    <h1 class="subtitle is-5">Collections</h1>
-    {% for collection in collections %}
-    <a href="/collection/{{collection.collectionID}}?goto_page={{image_meta.fileID}}">{{collection.title}}</a><br />
-    {% endfor %}
-    {% endif %}
-    <hr />
+
+
+
     {% if author.get('sidebar').content %}
+    <hr />
     <h1 class="subtitle">About The Author</h1>
     <div>
         {{md(user.get('sidebar', {}).get("content", ""), safe_mode="remove")|safe}}
@@ -73,15 +75,37 @@
 </div>
 {% endblock %}
 {% block content %}
-{% with author = get_user(image_meta['userID']) %}
-<div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image smut" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'"/>
-</div>
-<p>Click for full image</p>
-<hr />
-<div class="box">
-    <h1 class="subtitle">Comments</h1>
-    <p>Coming soon</p>
+<div class="mobile_flip">
+
+
+
+    {% with author = get_user(image_meta['userID']) %}
+    <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
+        <img id="img" src="/api/image/{{image_meta.fileID}}" class="image smut" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'" />
+    </div>
+    <p>Click for full image</p>
+    {% if collection %}
+    <div class="box is-info">
+        <style>
+            .smut.small {
+                width: auto;
+                height: 128px;
+            }
+        </style>
+        <div style="display:flex;flex-flow:column;">
+            <!-- Show the first 4 images of the collection -->
+            <h1 class="subtitle is-5" style="margin:0;">{{collection.title}}</h1>
+            This collection has {{collection.images|length}} images
+            <div style="display:flex;flex-flow:row">
+                {% for image in collection.images[:4] %}
+                <a class="smut small thumbnail" href="/collection/{{collection.collectionID}}">
+                    <img src="/api/image/{{image}}/thumbnail" />
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endwith %}
 {% endblock %}

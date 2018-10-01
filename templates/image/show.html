@@ -2,7 +2,7 @@
 {% block head %}
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@Quartz_" />
-<meta name="twitter:title" content="{{image_meta.title or 'Quartz Image'}}" />
+<meta name="twitter:title" content="" />
 <meta name="twitter:description" content="{{db.get_tags_string(image_meta.tags)}}" />
 <meta name="twitter:image" content="/api/image/{{image_meta.fileID}}" />
 {% endblock %}
@@ -76,12 +76,9 @@
 {% endblock %}
 {% block content %}
 <div class="mobile_flip">
-
-
-
     {% with author = get_user(image_meta['userID']) %}
     <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-        <img id="img" src="/api/image/{{image_meta.fileID}}" class="image smut" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'" />
+        <img id="img" src="{{quartz_config.get('cdn_url') or ''}}/api/image/{{image_meta.fileID}}" class="image smut" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'" />
     </div>
     <p>Click for full image</p>
     {% if collection %}

@@ -190,21 +190,21 @@
             $('.type').addClass('is-hidden');
             $('.option_' + this.value).removeClass('is-hidden');
         })
-        $('.new_tag_confirm').click(function () {
-            $.ajax({
-                url: '/api/tags/create',
-                method: 'POST',
-                data: $('#new_tag_form').serialize()
-            }).done(function (resp) {
-                if (resp['success']) {
-                    window.tags.push(resp['tag']);
-                    render_tags();
-                }
-            })
-        })
+
         $('.modal').addClass('is-active');
     }
-
+    $('.new_tag_confirm').click(function () {
+        $.ajax({
+            url: '/api/tags/create',
+            method: 'POST',
+            data: $('#new_tag_form').serialize()
+        }).done(function (resp) {
+            if (resp['success']) {
+                window.tags.push(resp['tag']);
+                render_tags();
+            }
+        })
+    })
     function add_tag_to_server() {
         var tag_name = $('#tag_name').val();
         $('#tag_add').addClass('is-loading');
@@ -316,7 +316,7 @@
                 </label>
             </div>
             <br />
-            <p id="file_size"></p>
+            <p><span id="file_size">0MB</span> / 8MB max</p>
         </div>
         <div class="field is-horizontal">
             <div class="field-body">

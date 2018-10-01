@@ -1,4 +1,7 @@
 ﻿{% extends 'imports.html' %}
+{% block head %}
+<script src="/static/js/humanize.js"></script>
+{% endblock %}
 {% block content %}
 
 <div class="modal">
@@ -35,44 +38,45 @@
             </form>
         </div>
     </div>
-    
+
     <button class="modal-close is-large" aria-label="close"></button>
 </div>
 
 <style>
     .top_image_holder {
-        width:100%;
-        height:200px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        position:relative;
-        flex-flow:column
+        width: 100%;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        flex-flow: column
     }
-    .top_image_holder > img {
-        height:100%;
-        width:auto;
-    }
-    .top_image_holder > .overlay {
-        position:absolute;
-        top:0;
-        left:0;
-        width:100%;
-        height:100%;
-        z-index:55;
-        background:rgba(0,0,0,.4);
-        display:flex;
-        justify-content:center;
-        align-items:center;
 
-    }
+        .top_image_holder > img {
+            height: 100%;
+            width: auto;
+        }
+
+        .top_image_holder > .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 55;
+            background: rgba(0,0,0,.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
     .options_list {
-        position:absolute;
-        top:0;
-        right:0;
-        margin:1em;
-        z-index:4;
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 1em;
+        z-index: 4;
     }
 
     .checkmark__circle {
@@ -126,7 +130,6 @@
             box-shadow: inset 0px 0px 0px 30px #7ac142;
         }
     }
-
 </style>
 <script>
     window.tags = []
@@ -142,7 +145,7 @@
         $('#tag_add').removeClass('is-loading');
         $('.modal').removeClass('is-active');
         $('#tag_name').val('');
-        
+
     }
 
     function findObjectByKey(array, key, value) {
@@ -280,7 +283,7 @@
     {% endif %}
 </script>
 <div class="top_image_holder box" style="display:none;">
-    <img src="" id="new_image_holder"/>
+    <img src="" id="new_image_holder" />
     <h1 class="subtitle" id="new_image_blury" style="display:none;margin-bottom:0;margin-top:1em;">Heads up! This image may be blury when shown to users with larger screens!</h1>
     <div class="options_list">
         <a onclick="show_more()" style="font-size:2em;"><i class="fas fa-search"></i></a>
@@ -292,9 +295,9 @@
 <div class="box">
     <h1 class="title">Upload</h1>
     <h2 class="subtitle">Upload a new image for the world to enjoy!</h2>
-    
+
     <form method="post" enctype="multipart/form-data" id="new_image_form">
-        <div class="field is-centered" style="">
+        <div class="field is-centered" style="flex-flow:column;">
             <div class="file has-name">
                 <label class="file-label">
                     <input class="file-input" type="file" name="image" id="upload" required>
@@ -311,6 +314,7 @@
                     </span>
                 </label>
             </div>
+            <p><span id="file_size">0MB</span> / 8MB max</p>
         </div>
         <div class="field is-horizontal">
             <div class="field-body">
@@ -386,7 +390,8 @@
                         $('#new_image_blury').css('display', 'none')
                         var img = $('.top_image_holder > img')[0];
                         console.log(img)
-                        img.src = URL.createObjectURL(this.files[0]); // set src to file url
+                        var file = this.files[0]
+                        img.src = URL.createObjectURL(file); // set src to file url
                         img.onload = function () {
                             $('.top_image_holder').css('display', 'flex');
                             $('.overlay').removeClass('is-hidden');
@@ -397,6 +402,7 @@
                                 $('#new_image_blury').css('display', 'block')
                             }
                         }
+                        $('#file_size').text(Humanize.fileSize(file.size))
                     }
                 });
             });
@@ -419,7 +425,7 @@
                 if (tag_meta) {
                     tags.push(tag_meta['tagID'])
                 }
-                
+
             }
             $('#tag_list').val(tags.join())
             $('#new_image_form').submit();

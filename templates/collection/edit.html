@@ -1,9 +1,14 @@
 {% extends 'imports.html' %}
+{% from './macros/tag_form.html' import tag_form with context %}
+{% from './macros/tag_form_modal.html' import tag_form_modal with context %}
+
 {% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 {% endblock %}
 {% block content %}
+{{ tag_form_modal() }}
+
 <div class="box">
     <h1 class="title">Editing {{collection.title}}</h1>
     <nav class="level is-mobile">
@@ -41,6 +46,7 @@
                 <input class="input" type="text" name="title" placeholder="Title" value="{{collection.title}}">
             </div>
         </div>
+        <!--
         <div class="field">
             <label class="label">Language</label>
             <div class="control">
@@ -48,6 +54,17 @@
             </div>
             <p class="help">This is so that if you are creating a comic, you can set the language</p>
         </div>
+        -->
+        {{tag_form(title='Collection Tags', help='Collection tags will override image tags. If you dont want this, please consider switching the mode to "Image Set"')}}
+        <script>
+            $(document).ready(function () {
+                // automagicly run the renderer
+                var tags = {{ collection.get('tags', [])| tojson }}
+                console.log(tags)
+                window.tags = tags;
+                render_tags()
+            })
+        </script>
         <!-- Image selector here -->
         <script>
             $(document).ready(function () {
@@ -84,7 +101,7 @@
                     opacity: 0.6,
                     revert: 'invalid'
                 });
-                
+
             });
         </script>
         <h1 class="title is-3">Images</h1>
@@ -96,13 +113,13 @@
                     overflow-y: scroll;
                     position: relative;
                 }
+
                 .draggable.item {
                     width: 128px;
                     height: auto;
                     margin: auto;
                     margin-bottom: 20px;
-                    position:relative;
-
+                    position: relative;
                 }
             </style>
             <script>
@@ -115,9 +132,9 @@
                         $('.image_editor_list').css('height', '700px');
                         window.showing_more = true
                     }
-                    
+
                 }
-                function send_form() {
+                function lock_images() {
                     var files = []
                     $('#image_list').children('div').each(function () {
                         files.push($(this).attr('data-fileID'))
@@ -151,10 +168,10 @@
             </div>
         </div>
         <a onclick="toggle_show()" class="button is-info">Toggle Size</a>
-        <input id="fileIDs" name="images"/>
+        <input id="fileIDs" name="images" hidden />
         <br />
         <br />
-        <button class="button is-info" style="margin:auto;" onclick="send_form()">Edit</button>
+        <button class="button is-info" style="margin:auto;" onclick="lock_images()">Edit</button>
     </form>
 </div>
 {% endblock %}

@@ -33,7 +33,13 @@
     </script>
 
     <div style="display:flex;flex-flow:column">
-        {{ tag_list(image_meta.tags, column=True) }}
+        {% if collection.tags %}
+        {{ tag_list(collection.tags, column=True) }}
+        {% else %}
+        <div class="notification is-warning">
+            This collection does not have any tags<br /><small>It may be hard to find this collection</small>
+        </div>
+        {% endif %}
     </div>
     <hr />
     <h1 class="subtitle is-5">Info</h1>
@@ -47,8 +53,9 @@
     {% if g.debug_req %}
     <p><b>Storage Location: {{image_meta.location}}</b></p>
     {% endif %}
-    <hr />
+
     {% if author.get('sidebar').content %}
+    <hr />
     <h1 class="subtitle">About The Author</h1>
     <div>
         {{md(user.get('sidebar', {}).get("content", ""), safe_mode="remove")|safe}}
@@ -74,6 +81,7 @@
                 <b>{{collection.title}}</b> | <strong>{{collection.images|length}}</strong> image{% if collection.images|length > 1 %}s{% endif %}
             </p>
         </div>
+        <!--
         <div class="level-item">
             <div class="control has-icons-left">
                 <div class="select">
@@ -87,6 +95,7 @@
                 </span>
             </div>
         </div>
+        -->
     </div>
 
     <!-- Right side -->

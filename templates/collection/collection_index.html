@@ -45,9 +45,9 @@
 <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;flex-flow:wrap;">
 
     {% for img in collection.images %}
-    <div class="smut thumbnail">
+    <a class="smut thumbnail" href="/collection/{{collection.collectionID}}?page={{loop.index}}">
         <img src="/api/image/{{img}}/thumbnail"/>
-    </div>
+    </a>
     {% endfor %}
     
 </div>

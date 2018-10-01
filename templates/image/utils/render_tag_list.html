@@ -4,16 +4,16 @@
     <div class="control">
         <div class="tags has-addons">
             <span class="tag is-dark">{{tag.type}}</span>
-            {% if tag.type == 'fandom' %}
+            {% if tag.type == 'fandom' or tag.colour == 'blue' %}
             <span class="tag is-info">{{tag.name}}</span>
             {% endif %}
-            {% if tag.type == 'character' %}
-            <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom}}){% endif %}</span>
+            {% if tag.type == 'character' or tag.colour == 'red' %}
+            <span class="tag is-danger">{{tag.name}} {% if tag.fandom %} ({{tag.fandom_internal}}){% endif %}</span>
             {% endif %}
-            {% if tag.type == 'kink' %}
+            {% if tag.type == 'kink' or tag.colour == 'yellow' %}
             <span class="tag is-warning">{{tag.name}}</span>
             {% endif %}
-            {% if tag.type == 'author' %}
+            {% if tag.type == 'author' or tag.colour == 'green' %}
             <span class="tag is-success">{{tag.name}}</span>
             {% endif %}
             <a class="tag is-delete" onclick="remove_tag('{{tag.tagID}}')"></a>

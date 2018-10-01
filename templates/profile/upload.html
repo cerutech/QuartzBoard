@@ -1,46 +1,12 @@
 ﻿{% extends 'imports.html' %}
+{% from './macros/tag_form.html' import tag_form with context %}
+{% from './macros/tag_form_modal.html' import tag_form_modal with context %}
+
 {% block head %}
 <script src="/static/js/humanize.js"></script>
 {% endblock %}
 {% block content %}
-
-<div class="modal">
-    <div class="modal-background"></div>
-    <div class="modal-content">
-        <div class="box">
-            <form id="new_tag_form">
-                <h2 class="title">New Tag</h2>
-                <h3 class="subtitle">Creating "<span class="tag_name"></span>"</h3>
-                <hr />
-
-                <input class="tag_name" name="tag_name" hidden />
-                <label class="label">Type Of Tag</label>
-                <div class="control">
-
-                    <div class="select">
-                        <select name="type" class="type_switcher">
-                            <option value="character">Character</option>
-                            <option value="fandom">Fandom</option>
-                            <option value="kink" selected>Kink</option>
-                            <option value="author">Artist</option>
-                        </select>
-                    </div>
-                </div>
-                <p class="help">This is to allow users to sort by type. For instance: "artist:Cerulean" or "fandom:Homesmut"<br />Other options may be avalible if you pick certain types</p>
-                <br />
-                <div class="type option_character is-hidden control">
-                    <label class="label">Fandom</label>
-                    <input class="input" name="fandom" placeholder="Fandom" />
-                    <p class="help">This is optional </p>
-                </div>
-                <br />
-                <a class="button is-success new_tag_confirm">Confirm</a>
-            </form>
-        </div>
-    </div>
-
-    <button class="modal-close is-large" aria-label="close"></button>
-</div>
+{{tag_form_modal()}}
 
 <style>
     .top_image_holder {
@@ -132,140 +98,6 @@
     }
 </style>
 <script>
-    window.tags = []
-    $('.modal-background').click(function () {
-        $('.modal').removeClass('is-active');
-        reopen_tag_button()
-    })
-    $('.modal-close').click(function () {
-        $('.modal').removeClass('is-active');
-        reopen_tag_button()
-    })
-    function clean_up() {
-        $('#tag_add').removeClass('is-loading');
-        $('.modal').removeClass('is-active');
-        $('#tag_name').val('');
-
-    }
-
-    function findObjectByKey(array, key, value) {
-        for (var i = 0; i < array.length; i++) {
-            try {
-                if (array[i][key] === value) {
-                    return array[i];
-                }
-            } catch (error) {
-                console.log('rip')
-            }
-        }
-        return null;
-    }
-    function deleteObjectByKey(array, key, value) {
-
-        for (var i = 0; i < array.length; i++) {
-            try {
-                if (array[i][key].toString() === value.toString()) {
-                    array[i] = null;
-                }
-            } catch (err) { }
-        }
-        return array
-    }
-
-    function delete_from_array(array, element) {
-        return array.filter(e => e !== element);
-    }
-
-    function remove_tag(tagID) {
-        window.tags = delete_from_array(window.tags, tagID)
-        console.log(window.tags);
-        render_tags();
-    }
-
-    function show_tag_form(tag_name) {
-        var form = $('#new_tag_form');
-        form.find('.tag_name').val(tag_name);
-        $($('.tag_name')[0]).text(tag_name)
-        $('.type_switcher').change(function () {
-            $('.type').addClass('is-hidden');
-            $('.option_' + this.value).removeClass('is-hidden');
-        })
-
-        $('.modal').addClass('is-active');
-    }
-    $('.new_tag_confirm').click(function () {
-        $.ajax({
-            url: '/api/tags/create',
-            method: 'POST',
-            data: $('#new_tag_form').serialize()
-        }).done(function (resp) {
-            if (resp['success']) {
-                window.tags.push(resp['tag']);
-                render_tags();
-            }
-        })
-    })
-    function add_tag_to_server() {
-        var tag_name = $('#tag_name').val();
-        $('#tag_add').addClass('is-loading');
-        $.ajax({
-            url: '/api/tags/check',
-            method: 'POST',
-            data: { 'tag_name': tag_name }
-        }).done(function (data) {
-            $('#tag_add').removeClass('is-loading');
-            if (data['success']) {
-
-                if (data['multiple_choice']) {
-                    $('#multiple_choice').html(data['html'])
-                } else {
-                    clean_up()
-                }
-
-                if (data['needs_adding']) {
-                    show_tag_form(tag_name);
-                } else {
-                    if (findObjectByKey(window.tags, 'tagID', data['tag']['tagID'])) {
-                        show_notification('You have already added this tag!', 'is-warning')
-                        return
-                    }
-                    // add tagID to window.tags
-                    window.tags.push(data['tag']);
-                    render_tags();
-                }
-            }
-        })
-    }
-
-    function render_tags() {
-        // clean up and re-render window.tags
-        var holder = $('.tag_holder');
-        $.ajax({
-            url: '/api/tags/render_tag_list',
-            method: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            data: JSON.stringify(window.tags)
-        }).done(function (resp) {
-            clean_up()
-            holder.html(resp['html'])
-        })
-    }
-    function create_tag() {
-        var tag_name = $('#tag_name').val()
-        if (!tag_name) {
-            show_notification('You need to have a tag name before creating a tag', 'is-warning')
-        } else {
-            show_tag_form(tag_name);
-        }
-    }
-    function select_tag(tagID) {
-        window.tags.push(tagID);
-        render_tags();
-
-        $('#multiple_choice').html('')
-    }
-
     window.is_showing_more = false;
     function show_more() {
         if (window.is_showing_more) {
@@ -340,38 +172,7 @@
             </div>
         </div>
 
-        <div class="field">
-            <label class="label">Tags</label>
-            <!--  -->
-            <div class="field has-addons is-expanded">
-                <div class="control is-expanded">
-                    <input class="input" type="text" id="tag_name" placeholder="Tag name">
-                </div>
-                <div class="control">
-                    <a class="button is-info" id="tag_add" onclick="add_tag_to_server()">
-                        Search
-                    </a>
-                </div>
-                <div class="control">
-                    <a class="button is-info" id="" onclick="create_tag()">
-                        Create
-                    </a>
-                </div>
-            </div>
-            <div class="control" id="tag_template" style="display:none;">
-                <div class="tags has-addons">
-                    <a class="tag is-link tag_name"></a>
-                    <a class="tag is-delete"></a>
-                </div>
-            </div>
-            <div id="multiple_choice">
-
-            </div>
-            <div class="field is-grouped is-grouped-multiline tag_holder">
-
-            </div>
-            <input placeholder="Tags" name="tags" id="tag_list" required hidden />
-        </div>
+        {{tag_form()}}
 
         <script>
             $('#upload').on('change', function () {
@@ -419,15 +220,7 @@
     </form>
     <script>
         $('#submit_form').click(function () {
-            var tags = []
-            for (var i in window.tags) {
-                tag_meta = window.tags[i];
-                if (tag_meta) {
-                    tags.push(tag_meta['tagID'])
-                }
 
-            }
-            $('#tag_list').val(tags.join())
             $('#new_image_form').submit();
         })
     </script>

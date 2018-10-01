@@ -135,7 +135,8 @@ def ctx_processor():
     return {'user': flask.g.user,
             'is_logged_in': flask.g.is_logged_in,
             'dark_mode': flask.request.cookies.get('dark_mode', 'on'),
-            'enable_nsfw': flask.request.cookies.get('enable_nsfw', '0')}
+            'enable_nsfw': flask.request.cookies.get('enable_nsfw', '0'),
+            'quartz_config': db.config}
 
 template_functions = {'get_popular_tags': db.get_popular_tags,
                         'get_user': db.get_user,

@@ -56,6 +56,17 @@
         </div>
         -->
         {{tag_form(title='Collection Tags', help='Collection tags will override image tags. If you dont want this, please consider switching the mode to "Image Set"')}}
+
+        <label class="label">Collection Images Mode</label>
+        <div class="select">
+            <select name="collection_mode">
+                <option value="default" {% if collection.mode == 'default' or not collection.mode %}selected{% endif %}>"Default" Mode (Hides all pages except from the cover (first) page in any searches)</option>
+                <option value="hidden" {% if collection.mode == 'hidden' %}selected{% endif %}>"Hidden" mode (Hides all pages from searches. Only readable via a direct link)</option>
+                <option value="show" {% if collection.mode == 'show' %}selected{% endif %}>"Show" mode (All images inside the collection are visable in searches)</option>
+            </select>
+        </div>
+        <p class="help">For more help picking a mode, please read this guide</p>
+
         <script>
             $(document).ready(function () {
                 // automagicly run the renderer
@@ -159,11 +170,16 @@
             </div>
             <div class="column image_editor_list">
                 <p><b>Your Uploads</b></p>
-                {% for image in user_images %}
+                {% for image in user_images|reverse %}
+                {% with collection = db.check_collections_for_image(image.fileID) %}
+                {% if not collection %}
                 <div class="draggable item" data-fileID="{{image.fileID}}">
                     <img class="image" src="/api/image/{{image.fileID}}/thumbnail" style="" />
                     <a class="delete" style="display:none;"></a>
                 </div>
+                {% endif %}
+                {% endwith %}
+
                 {% endfor %}
             </div>
         </div>

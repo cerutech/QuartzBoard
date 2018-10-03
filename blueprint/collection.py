@@ -49,9 +49,11 @@ def create_new_collection():
                           'title': data['title'],
                           'images': [],
                           'created_at': datetime.utcnow(),
+                          'uploaded_at': datetime.utcnow(), # for compat purposes
                           'languages': [{'lang': data['language'], 'collectionID': id}],
                           'views': [],
-                          'likes': []}
+                          'likes': [],
+                          'tags': []}
 
         db.db.collections.insert_one(new_collection)
         return flask.redirect('/collection/{}/edit'.format(id))
@@ -93,6 +95,7 @@ def api_edit_collcetion(collectionID):
 
     if flask.request.method == 'POST':
         to_edit = flask.request.form
+        #print(to_edit)
         images = to_edit['images'].split(',')
         confirmed_images = []
         for img in images:
@@ -107,8 +110,17 @@ def api_edit_collcetion(collectionID):
                 
             confirmed_images.append(image_meta['fileID'])
 
+        # now we check tags
+        tags_used = [str(x) for x in to_edit['tags'].split(',') if x is not '']
+        for tag in tags_used:
+            if not db.get_tag(tag):
+                flask.flash('Invalid tag: "{}" used'.format(tag), 'is-danger')
+                return flask.redirect('/')
+
         db.db.collections.update_one({'collectionID': collectionID}, {'$set': {'images': confirmed_images,
-                                                                               'title': to_edit['title']}})
+                                                                               'title': to_edit['title'],
+                                                                               'tags': tags_used,
+                                                                               'mode': to_edit['collection_mode']}})
         flask.flash('Updated this collection!', 'is-success')
 
     return flask.redirect('/collection/{}/edit'.format(collectionID))

@@ -1,4 +1,6 @@
 {% extends 'imports.html' %}
+{% from './macros/image_list.html' import render_quartz_list with context %}
+
 {% block content %}
 <style>
     .image_container {
@@ -20,8 +22,7 @@
         The following tags do not exist: {% for tag in broken_tags %}{{tag}}, {% endfor %}
     </div>
     {% endif %}
-    <h1 class="title">Search Results</h1>
-    <h3 class="subtitle">Found {{results.image_count}} images</h3>
+    <h1 class="title is-4">Search Results</h1>
     {% if results.evaluated_tags %}
     <div class="tags">
         {% for tag in results.evaluated_tags %}
@@ -29,6 +30,9 @@
         <div style="margin:0.5em"></div>
         {% endfor %}
     </div>
+    {% endif %}
+    {% if is_collection %}
+    <p>Returning only collections</p>
     {% endif %}
     <script>
         function update_query_string(key, value, url) {
@@ -64,21 +68,18 @@
             window.location = update_query_string('page', page_number)
         }
     </script>
-    
-    {% if results.images %}
+    {% if results.results %}
     <div class="buttons has-addons">
+        {% if current_page|int != 1 %}
         <span class="button" onclick="goto_page('{{current_page|int - 1}}')">Previous Page</span>
+        {% endif %}
         <span class="button" onclick="goto_page('{{current_page|int + 1}}')">Next Page</span>
     </div>
 
     {% endif %}
     <div class="image_container">
-        {% if results %}
-        {% for image in results.images %}
-        <div class="image_handler">
-            <img class="image image_result" onclick="open_image('{{image.fileID}}')" src="/api/image/{{image.fileID}}/thumbnail">
-        </div>
-        {% endfor %}
+        {% if results.results %}
+        {{render_quartz_list(results.results)}}
         {% else %}
         <div class="notification is-warning">
             No results found

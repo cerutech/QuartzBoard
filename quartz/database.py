@@ -121,7 +121,7 @@ class Utils():
 
 class DataBase:
     def __init__(self):
-        self.__version__ = '0.2.0 (Sapphire)'
+        self.__version__ = '0.6.1 (Ruby)'
         self.config = RecordObject(**config)
         
         self.db_connection = pymongo.MongoClient(self.config.mongoURI)
@@ -290,7 +290,62 @@ class DataBase:
 
         return {'images': images, 'search_query': to_search, 'evaluated_tags': tags, 'image_count': number_images}
 
+    def search_items(self, tag_names=[], rating='any', author='any', sort_by='uploaded_at', page_number=1, page_size=20, count=False, return_dict=False):
+        skips = page_size * (int(page_number ) - 1)
+        tags = []
+        is_collection = False
+        for tag in tag_names:
+            if tag == 'is_collection':
+                is_collection = True
+            else:
+                if ':' not in tag:
+                    tag_meta = self.db.tags.find({'internal_name': tag.lower()})
+                else:
+                    type, name = tag.lower().split(':')
+                    search_query = {'internal_name': name.lower(), 'type': type}
+                    if '(' in name and ')' in name and type == 'character':
+                        # we have a fandom to search by
+                        search_query['fandom_internal'] = name.split('(')[1].split(')')[0].lower()
+                        search_query['internal_name'] = name.split('(')[0]
 
+                    tag_meta = self.db.tags.find(search_query)
+
+                for potential_tag in tag_meta:
+                    tags.append(potential_tag['tagID'])
+
+
+
+        to_search = {}
+        if tags:
+            to_search['tags'] = {'$all': tags}
+
+        if rating != 'any':
+            to_search['rating'] = rating
+
+        if author != 'any':
+            to_search['userID'] = str(author)
+
+        images = []
+        if not is_collection:
+            images = list(self.db.images.find(to_search).sort(sort_by, -1).skip(skips).limit(page_size))
+        items = images
+
+        collections = list(self.db.collections.find(to_search).sort(sort_by, -1).skip(skips).limit(page_size))
+        items += collections
+
+        items = sorted(items, key = lambda i: i['uploaded_at'], reverse=True)[:page_size]
+
+        if return_dict:
+            return {'results': items, 'search_query': to_search, 'evaluated_tags': tags}
+        else:
+            return items
+
+    def get_index_of_image(self, collection, fileID):
+        for i, image in enumerate(collection['images']):
+            if fileID == image:
+                return i
+        else:
+            return None
 
     def count_images(self, tags):
         """
@@ -353,8 +408,8 @@ class DataBase:
         output = []
         for tagID in tag_list:
             tag = self.get_tag(tagID)
-
-            output.append('{} ({})'.format(tag['name'],tag['type']))
+            if tag:
+                output.append('{} ({})'.format(tag['name'],tag['type']))
 
         return ', '.join(output)
 
@@ -386,6 +441,9 @@ class DataBase:
             else:
                 return False
 
+    def check_collections_for_image(self, fileID):
+        return db.db.collections.find_one({'images': {'$all': [fileID]}})
+
     def make_id(self, length=18):
         return str(''.join([str(secrets.choice(range(0,9))) for _ in range(0,length)]))
 
@@ -407,15 +465,15 @@ class DataBase:
             string = string.replace(char, safe)
         return string
 
-    def make_internal_name(self, to_change):
+    def make_internal_name(self, to_change, safe='_'):
         """
         Change the input string to fit the internal name scheme
         aka, remove spaces, lower all characters
         """
         to_change = to_change.lower()
-        to_change = self.make_url_safe(to_change).lower()
+        to_change = self.make_url_safe(to_change, safe=safe).lower()
         return to_change
-
+    
     # permissions
     def get_role(self, roleID):
         if not roleID:
@@ -436,4 +494,3 @@ try:
     db = db
 except:
     db = DataBase()
-    logger.error('New instance')

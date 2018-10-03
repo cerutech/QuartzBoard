@@ -27,9 +27,7 @@ def mass_upload():
             
             #fileID = db.make_token(length=32)
             fileID = db.make_word_token(word_count=4) + '_b' # _b = bulk uploaded
-            print([(k, v) for k,v in data.items()])
-            #if not image_bytes:
-            #    return flask.redirect('/profile/upload')
+
             tags_used = [str(x) for x in data['tags'].split(',')]
             if not tags_used:
                 flask.flash('No tags found', 'is-danger')

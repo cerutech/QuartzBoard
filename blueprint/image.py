@@ -76,11 +76,15 @@ def search():
             author = tag.split(':')[1]
 
 
-    results = db.search_images(tag_names=search_tags,
+    results = db.search_items(tag_names=search_tags,
                                rating=rating,
                                author=author,
                                page_number=current_page,
-                               count=True)
+                               count=True,
+                               return_dict=True)
+
+    if 'is_collection' in search_tags:
+        is_collection = True
 
     return flask.render_template('image/search.html', **locals())
 
@@ -190,10 +194,10 @@ def create_tag():
     data = flask.request.form
     tag_meta = db.db.tags.find_one({'internal_name': db.make_internal_name(data['tag_name'])})
 
-    if not data['tag_name']:
+    if not data.get('tag_name'):
         return flask.jsonify({'success':False, 'msg': 'Tag name is missing'})
 
-    if not data['type']:
+    if not data.get('type'):
         return flask.jsonify({'success':False, 'msg': 'Tag type is missing'})
 
     if tag_meta:
@@ -211,15 +215,27 @@ def create_tag():
             if not bypass:
                 return flask.jsonify({'success': False, 'msg': 'Tag already exists'})
 
-    tag_data = {'name': data['tag_name'],
-                'internal_name': db.make_internal_name(data['tag_name']),
-                'type': data['type'],
-                'tagID': db.make_id(length=18),
-                'uses': 1,
-                'searches':0,
-                'created_by': flask.g.user['userID'],
-                'created_at': datetime.utcnow().timestamp(),
-                'likes':[]}
+    if data['type'] != 'custom':
+        tag_data = {'name': data['tag_name'],
+                    'internal_name': db.make_internal_name(data['tag_name']),
+                    'type': data['type'],
+                    'tagID': db.make_id(length=18),
+                    'uses': 1,
+                    'searches':0,
+                    'created_by': flask.g.user['userID'],
+                    'created_at': datetime.utcnow().timestamp(),
+                    'likes':[]}
+    else:
+        tag_data = {'name': data['tag_name'],
+                    'internal_name': db.make_internal_name(data['tag_name']),
+                    'type': data['tag_type'],
+                    'tagID': db.make_id(length=18),
+                    'uses': 1,
+                    'searches':0,
+                    'created_by': flask.g.user['userID'],
+                    'created_at': datetime.utcnow().timestamp(),
+                    'likes':[],
+                    'colour': data.get('tag_colour', 'blue')}
 
     if data['type'] == 'character' and data.get('fandom'):
         tag_data['fandom'] = data['fandom']

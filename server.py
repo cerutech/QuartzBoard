@@ -40,7 +40,9 @@ app.config["flask_profiler"] = {
 
 @app.route('/')
 def index():
-    images = db.get_images(page_number=1, page_size=10)
+    #images = db.get_images(page_number=1, page_size=10)
+    items = db.search_items(page_number=1, page_size=20)
+    #print(items)
     return flask.render_template('home.html', **locals())
 
 @app.route('/test')

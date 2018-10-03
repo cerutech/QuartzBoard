@@ -10,7 +10,7 @@ from quartz import *
 logger = logging.getLogger('quartz.main')
 
 app = flask.Flask(__name__)
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+
 app.config['SECRET_KEY'] = db.config.secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
@@ -150,6 +150,7 @@ template_functions = {'get_popular_tags': db.get_popular_tags,
                         'image_utils': image_utils}
 
 app.jinja_env.globals.update(**template_functions)
+app.jinja_env.cache = {} # https://blog.socratic.org/the-one-weird-trick-that-cut-our-flask-page-load-time-by-70-87145335f679
 
 flask_profiler.init_app(app)
 
@@ -171,5 +172,7 @@ if __name__ == '__main__':
     app.register_blueprint(collection_api)
     app.register_blueprint(mass_upload_api)
     app.register_blueprint(admin_api)
+
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
 
     app.run('0.0.0.0', db.config.get('port', 8081), threaded=True)

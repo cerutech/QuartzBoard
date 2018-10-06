@@ -3,14 +3,16 @@ import flask
 import humanize
 import logging
 import sys
+import feedparser
 import flask_profiler
 import markdown
 from quartz import *
+import bs4
 
 logger = logging.getLogger('quartz.main')
 
 app = flask.Flask(__name__)
-
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SECRET_KEY'] = db.config.secret_key
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
@@ -40,10 +42,32 @@ app.config["flask_profiler"] = {
 
 @app.route('/')
 def index():
-    #images = db.get_images(page_number=1, page_size=10)
     items = db.search_items(page_number=1, page_size=20)
-    #print(items)
+
+    news_feed = feedparser.parse('https://medium.com/feed/quartzboard')
+    
     return flask.render_template('home.html', **locals())
+
+@app.route('/api/news')
+def get_news():
+    """
+    Part of the News app on the home page
+    This is a test for future plans to use Vue.js inside QB
+    """
+    news_feed = feedparser.parse('https://medium.com/feed/quartzboard')
+    stories = []
+    for entry in news_feed.entries:
+        soup = bs4.BeautifulSoup(entry.summary, 'lxml')
+        story = {}
+        story['title'] = entry.title
+        story['image'] = soup.find('img')['src']
+        story['content'] = soup.find('p').get_text()
+        story['href'] = entry.link
+        stories.append(story)
+
+    print(stories)
+
+    return flask.jsonify(stories)
 
 @app.route('/test')
 def test():
@@ -173,6 +197,6 @@ if __name__ == '__main__':
     app.register_blueprint(mass_upload_api)
     app.register_blueprint(admin_api)
 
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    
 
     app.run('0.0.0.0', db.config.get('port', 8081), threaded=True)

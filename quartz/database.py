@@ -290,7 +290,7 @@ class DataBase:
 
         return {'images': images, 'search_query': to_search, 'evaluated_tags': tags, 'image_count': number_images}
 
-    def search_items(self, tag_names=[], rating='any', author='any', sort_by='uploaded_at', page_number=1, page_size=20, count=False, return_dict=False):
+    def search_items(self, tag_names=[], rating='any', user='any', sort_by='uploaded_at', page_number=1, page_size=20, count=False, return_dict=False):
         skips = page_size * (int(page_number ) - 1)
         tags = []
         is_collection = False
@@ -322,12 +322,13 @@ class DataBase:
         if rating != 'any':
             to_search['rating'] = rating
 
-        if author != 'any':
+        if user != 'any':
             to_search['userID'] = str(author)
 
         images = []
         if not is_collection:
             images = list(self.db.images.find(to_search).sort(sort_by, -1).skip(skips).limit(page_size))
+
         items = images
 
         collections = list(self.db.collections.find(to_search).sort(sort_by, -1).skip(skips).limit(page_size))
@@ -460,7 +461,7 @@ class DataBase:
         return self.make_url_safe(''.join(output).encode().decode())
 
     def make_url_safe(self, string, safe=''):
-        illegal_chars = ["'",";","", "%", "#", "/", "?", "+", " "]
+        illegal_chars = ["'",";", "%", "#", "/", "?", "+", " "]
         for char in illegal_chars:
             string = string.replace(char, safe)
         return string

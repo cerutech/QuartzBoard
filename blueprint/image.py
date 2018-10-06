@@ -67,18 +67,18 @@ def search():
 
     search_tags = flask.request.args.get('tags', 'any').split()
     rating = 'any'
-    author = 'any'
+    user = 'any'
     fandom = 'any'
     for tag in search_tags:
         if 'rating:' in tag:
             rating = tag.split(':')[1]
-        if 'author:' in tag:
-            author = tag.split(':')[1]
+        if 'user:' in tag:
+            user = tag.split(':')[1]
 
 
     results = db.search_items(tag_names=search_tags,
                                rating=rating,
-                               author=author,
+                               user=user,
                                page_number=current_page,
                                count=True,
                                return_dict=True)

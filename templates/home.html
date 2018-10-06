@@ -1,4 +1,8 @@
 {% extends 'imports.html' %}
+{% block head %}
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+{% endblock %}
 {% from './macros/image_list.html' import render_quartz_list with context %}
 
 {% block content %}
@@ -40,10 +44,42 @@
 <br />
 <div>
     <h1 class="title">News</h1>
-    <div class="box">
-        <h2 class="subtitle">Looking for help</h2>
-        <p>Hey everyone! I am looking for people to help me out with the project. I need people to help me nail down some marketing stuff, sharing and adverting for instance. Unfortunately, i cant pay you right away but i can offer a place on the team as a highly valued person. </p>
-        <p>If you feel like you can offer some help towards the project, please contact me @Cerulean#7014 on Discord</p>
+    <div class="" id="news_app">
+        <!-- VUE.js news app. -->
+        <!-- Is actually a testing ground for future apps inside of QB -->
+        {% raw %}
+        <div v-if="loading" style="display:flex;align-items:center;justify-content:center;width:100%;height:250px;">
+            <a class="button is-loading"></a>
+        </div>
+        <div v-if="error">
+            <p>{{error}}</p>
+        </div>
+        <div v-for="news in news_feed" class="box">
+            <div class="columns">
+                <div class="column is-2">
+                    <img v-bind:src='news.image' style="width:auto;height:100%;max-height:150px;margin:auto;"/>
+                </div>
+                <div class="column">
+                    <h2 class="subtitle">{{news.title}}</h2>
+                    <p class="">{{news.content}}</p>
+                    <a v-bind:href="news.href">Read More</a>
+                </div>
+            </div>
+        </div>
+        {% endraw %}
     </div>
+    <script>
+        var news_app = new Vue({
+            el: '#news_app',
+            data: {
+                loading: true,
+                error: null,
+                news_feed:[]
+            },
+            mounted() {
+                axios.get('/api/news').then(response => (this.news_feed = response['data'], this.loading = false)).catch(error => {this.error = error})
+            }
+        })
+    </script>
 </div>
 {% endblock %}

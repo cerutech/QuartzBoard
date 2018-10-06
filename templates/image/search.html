@@ -73,7 +73,9 @@
         {% if current_page|int != 1 %}
         <span class="button" onclick="goto_page('{{current_page|int - 1}}')">Previous Page</span>
         {% endif %}
+        {% if results.results|length == 20 %}
         <span class="button" onclick="goto_page('{{current_page|int + 1}}')">Next Page</span>
+        {% endif %}
     </div>
 
     {% endif %}

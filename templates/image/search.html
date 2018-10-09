@@ -1,4 +1,8 @@
 {% extends 'imports.html' %}
+{% block head %}
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+{% endblock %}
 {% from './macros/image_list.html' import render_quartz_list with context %}
 
 {% block content %}
@@ -8,13 +12,13 @@
         flex-flow: wrap;
     }
 
-    .image_container > img {
-        margin: 10px;
-        font-size: 0px;
-        cursor: pointer;
-        max-height: 200px;
-        width: auto;
-    }
+        .image_container > img {
+            margin: 10px;
+            font-size: 0px;
+            cursor: pointer;
+            max-height: 200px;
+            width: auto;
+        }
 </style>
 <div>
     {% if broken_tags %}

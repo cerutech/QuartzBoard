@@ -1,0 +1,57 @@
+{% macro vue_blur_image(script=True) %}
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<style>
+    .blurry-img {
+        width: 100%;
+        height: auto;
+        -webkit-transition: 0.1s -webkit-filter linear;
+        -moz-transition: 0.1s -moz-filter linear;
+        -moz-transition: 0.1s filter linear;
+        -ms-transition: 0.1s -ms-filter linear;
+        -o-transition: 0.1s -o-filter linear;
+        transition: 0.1s filter linear, 1s -webkit-filter linear;
+        filter: blur(0px);
+    }
+    .is-blurred {
+        filter:blur(1px);
+
+    }
+</style>
+{% if script %}
+<script>
+{% endif %}
+    Vue.component('blured-img', {
+        props: ['src', 'smallSrc'],
+        data: function () {
+            return {
+                imageSrc: this.smallSrc,
+                isLoading: true
+            }
+        },
+        template: `<img :src=imageSrc class="blurry-img" v-bind:class="{'is-blurred': isLoading}"></img><p v-if="isLoading" class="title">Loading...</p>`,
+        methods: function () {
+
+            function getBase64(url) {
+                return axios
+                    .get(url, {
+                        responseType: 'arraybuffer'
+                    })
+                    .then(response => Buffer.from(response.data, 'binary').toString('base64'))
+            }
+        },
+    mounted: function () {
+        var img, that;
+        img = new Image();
+        that = this;
+        img.onload = function () {
+            // image is now in cache, load the image via switching of the SRCs
+            that.imageSrc = that.src;
+            that.isLoading = false;
+        }
+        img.src = this.src;
+    }
+})
+{% if script %}
+</script>
+{% endif %}
+{% endmacro %}

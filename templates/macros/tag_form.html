@@ -51,7 +51,7 @@
     }
 
     function show_tag_form(tag_name) {
-        var form = $('#new_tag_form');
+        var form = $('#new_tag_form')
         form.find('.tag_name').val(tag_name);
         $($('.tag_name')[0]).text(tag_name)
         $('.type_switcher').change(function () {

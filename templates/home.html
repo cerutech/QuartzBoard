@@ -1,11 +1,14 @@
 {% extends 'imports.html' %}
 {% block head %}
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
 {% endblock %}
 {% from './macros/image_list.html' import render_quartz_list with context %}
 
+
 {% block content %}
+<!-- Import vue component -->
+
 <style>
     @media only screen and (max-width: 366px) {
         .image_handler {
@@ -24,7 +27,6 @@
 
 <div class="image_container">
     {{ render_quartz_list(items) }}
-
 </div>
 <a class="button is-primary" href="/search?page=2" style="float:right;">
     View More!
@@ -57,7 +59,7 @@
         <div v-for="news in news_feed" class="box">
             <div class="columns">
                 <div class="column is-2">
-                    <img v-bind:src='news.image' style="width:auto;height:100%;max-height:150px;margin:auto;"/>
+                    <img v-bind:src='news.image' style="width:auto;height:100%;max-height:150px;margin:auto;" />
                 </div>
                 <div class="column">
                     <h2 class="subtitle">{{news.title}}</h2>
@@ -74,12 +76,12 @@
             data: {
                 loading: true,
                 error: null,
-                news_feed:[]
+                news_feed: []
             },
             mounted() {
-                axios.get('/api/news').then(response => (this.news_feed = response['data'], this.loading = false)).catch(error => {this.error = error})
+                axios.get('/api/news').then(response => (this.news_feed = response['data'], this.loading = false)).catch(error => { this.error = error })
             }
-        })
+        });
     </script>
 </div>
 {% endblock %}

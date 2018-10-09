@@ -1,10 +1,18 @@
 {% extends 'imports.html' %}
+{% from './macros/vue/blur_image.html' import vue_blur_image %}
+
 {% block head %}
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@Quartz_" />
 <meta name="twitter:title" content="" />
 <meta name="twitter:description" content="{{db.get_tags_string(image_meta.tags)}}" />
 <meta name="twitter:image" content="/api/image/{{image_meta.fileID}}" />
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.rawgit.com/rikmms/progress-bar-4-axios/0a3acf92/dist/index.js"></script>
+<script>loadProgressBar()</script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/rikmms/progress-bar-4-axios/0a3acf92/dist/nprogress.css" />
 {% endblock %}
 {% block sidebar %}
 <div class="column is-3">
@@ -31,10 +39,14 @@
             })
         }
     </script>
-
+    <style>
+        .tags {
+            margin-bottom: 0 !important;
+        }
+    </style>
     <div style="display:flex;flex-flow:column">
         {% if image_meta.tags %}
-        {{ tag_list(image_meta.tags, column=True) }}
+        {{ tag_list(image_meta.tags) }}
         {% else %}
         <div class="notification is-danger">
             No tags selected
@@ -75,10 +87,11 @@
 </div>
 {% endblock %}
 {% block content %}
-<div class="mobile_flip">
+{{vue_blur_image()}}
+<div class="mobile_flip" id="image_app">
     {% with author = get_user(image_meta['userID']) %}
-    <div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-        <img id="img" src="{{quartz_config.get('cdn_url') or ''}}/api/image/{{image_meta.fileID}}" class="image smut" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'" />
+    <div class="" style="display:flex;align-items:center;justify-content:flex-start;width:100%;">
+        <img id="img" src="{{quartz_config.get('cdn_url') or ''}}/api/image/{{image_meta.fileID}}" small-src="{{quartz_config.get('cdn_url') or ''}}/api/image/{{image_meta.fileID}}/thumbnail" class="image smut" style="width:100%;max-width:750px;" />
     </div>
     <p>Click for full image</p>
     {% if collection %}
@@ -103,6 +116,11 @@
         </div>
     </div>
     {% endif %}
+    <script>
+        var image_app = new Vue({
+            el: '#image_app'
+        })
+    </script>
 </div>
 {% endwith %}
 {% endblock %}

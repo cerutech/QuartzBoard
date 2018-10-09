@@ -5,10 +5,11 @@
         flex-flow: column;
     }
 </style>
-{% for tag in tags %}
-{% with tag = db.get_tag(tag, search_by="tagID") if fetch_tag else tag %}
-{% if tag %}
 <div class="control {% if column %}is-columned{% endif %}">
+    {% for tag in tags %}
+    {% with tag = db.get_tag(tag, search_by="tagID") if fetch_tag else tag %}
+    {% if tag %}
+
     <div class="tags has-addons" onclick="add_tag('{{tag.type}}:{{tag.internal_name}}{% if tag.fandom %}({{tag.fandom_internal}}){% endif %}')">
         {% if user %}
         {% if db.check_tag_like(tag.tagID, user.userID) %}
@@ -35,11 +36,11 @@
         <span class="tag is-success">{{tag.name}}</span>
         {% endif %}
     </div>
-</div>
+
     {% endif %}
     {% endwith %}
     {% endfor %}
-
+</div>
 {% endmacro %}
 {% macro tag_solo(tag, column=False, fetch=False, show_like=True) %}
 {% with tag = db.get_tag(tag, search_by="tagID") if fetch else tag %}

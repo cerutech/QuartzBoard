@@ -1,0 +1,61 @@
+{% macro tag_form_modal() %}
+<!-- QBV0.7 Vue.js app to create a new tag -->
+{% raw %}
+<div class="modal">
+    <div class="modal-background" @click="toggleTagModal()"></div>
+    <div class="modal-content">
+        <div class="box">
+            <form id="new_tag_form">
+                <h2 class="title">New Tag</h2>
+
+                <h3 class="subtitle">Creating "{{tags.tag_name}}"</h3>
+
+                <hr />
+
+                <input class="tag_name" name="tag_name" hidden :value="{{tags.tag_name}}" />
+
+                <label class="label">Type Of Tag</label>
+                <div class="control">
+
+                    <div class="select">
+                        <select name="type" class="type_switcher">
+                            <option value="character">Character</option>
+                            <option value="fandom">Fandom</option>
+                            <option value="kink" selected>Kink</option>
+                            <option value="author">Artist</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="help">This is to allow users to sort by type. For instance: "artist:Cerulean" or "fandom:Homesmut"<br />Other options may be avalible if you pick certain types</p>
+                <br />
+                <div class="type option_character is-hidden control">
+                    <label class="label">Fandom</label>
+                    <input class="input" name="fandom" placeholder="Fandom" />
+                    <p class="help">This is optional </p>
+                </div>
+                <div class="type option_custom is-hidden control">
+                    <label class="label">Tag Type</label>
+                    <input class="input" name="tag_type" placeholder="Type Of Tag. Misc, Meta etc. Keep it to a single word however!" />
+                    <p class="help" style="color:red;">This is required</p>
+                    <br />
+                    <label class="label">Tag Colour</label>
+                    <div class="select">
+                        <select name="tag_colour">
+                            <option value="red">Red</option>
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="yellow">Yellow</option>
+                        </select>
+                    </div>
+                </div>
+                <br />
+                <a class="button is-success new_tag_confirm">Confirm</a>
+            </form>
+        </div>
+    </div>
+
+    <button class="modal-close is-large" aria-label="close"></button>
+</div>
+{% endraw %}
+{% endmacro %}

@@ -6,7 +6,7 @@
 <meta name="twitter:site" content="@Quartz_" />
 <meta name="twitter:title" content="" />
 <meta name="twitter:description" content="{{db.get_tags_string(image_meta.tags)}}" />
-<meta name="twitter:image" content="/api/image/{{image_meta.fileID}}" />
+<meta name="twitter:image" content="{{quartz_config.get('cdn_url') or ''}}/api/image/{{image_meta.fileID}}" />
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://cdn.rawgit.com/rikmms/progress-bar-4-axios/0a3acf92/dist/index.js"></script>

@@ -11,7 +11,7 @@
 <!-- Item is apart of a collection -->
 
 <a class="smut thumbnail" href="/collection/{{collection.collectionID}}{% if collection.mode == 'show' %}?goto_page={{item.fileID}}{% endif %}" style="position:relative;">
-    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail" />
+    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail{%if is_chrome%}?format=webp{%endif%}" />
     <span class="tag" style="position:absolute;right:5px;top:5px;">{{collection.title}} | {{db.get_index_of_image(collection, item.fileID) + 1}}</span>
 </a>
 
@@ -20,7 +20,7 @@
 <!-- If item is not in a collection -->
 {% if item.status != 'private' %}
 <a class="smut thumbnail" href="/image/{{item.fileID}}">
-    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail" />
+    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail{%if is_chrome%}?format=webp{%endif%}" />
 </a>
 {% endif %}
 {% endif %}
@@ -29,7 +29,7 @@
 {% if item.get('collectionID') %}
 {% if item.mode not in ['hidden', 'show'] and item.images %}
 <a class="smut thumbnail" href="/collection/{{item.collectionID}}" style="position:relative">
-    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.images[0]}}/thumbnail" />
+    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.images[0]}}/thumbnail{%if is_chrome%}?format=webp{%endif%}" />
     <span class="tag" style="position:absolute;right:5px;top:5px;">{{item.title}} | {{item.images|length}}</span>
 </a>
 {% endif %}

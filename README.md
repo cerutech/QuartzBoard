@@ -1,6 +1,7 @@
-<h1 align="center">
-QuartzBoard Version 0.6 (Ruby)
-</h1> 
+<h2 align="center">
+QuartzBoard
+</h2> 
+<h4 align="center">Version 0.6 (Ruby)</h4>
 <p align="center">A new look at image boards</p>
 
 #### Warning: This project is still in alpha. There will be bugs. You have been warned.

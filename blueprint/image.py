@@ -120,6 +120,11 @@ def delete_image(fileID):
     return flask.jsonify({'success': True,
                           'msg':'Deleted image'})
 
+@image_api.route('/api/image/check')
+def check_existing():
+    data = flask.request.get_json()
+    print(data)
+
 
 @image_api.route('/api/image/<fileID>')
 def get_image(fileID):
@@ -166,12 +171,27 @@ def show_image_thumbnail(fileID):
     return flask.send_file(io.BytesIO(file),
                            mimetype='image/png')
 
+@image_api.route('/api/tags/find', methods=['GET'])
+def find_tags_by_name():
+    tag_name = flask.request.args.get('name')
+    tags = []
+    found_tags = list(db.db.tags.find({'internal_name': {'$regex':'^{}'.format(db.make_internal_name(tag_name))}}))
+    for t in found_tags:
+        del t['_id']
+        tags.append(t)
+
+    return flask.jsonify(tags[:10])
+
 
 @image_api.route('/api/tags/check', methods=['POST'])
 def get_tag():
+    """
+    As of 0.7:
+    Decprecated. Only for use with Bulk uploading for the time being
+    """
     data = flask.request.form
     # check a tags name
-    tag_meta = list(db.db.tags.find({'name': data['tag_name']})) #get_tag(data['tag_name'], search_by='name')
+    tag_meta = list(db.db.tags.find({'internal_name': db.make_internal_name(data['tag_name'])})) #get_tag(data['tag_name'], search_by='name')
 
     if len(tag_meta) == 1:
         tag_meta = tag_meta[0]
@@ -192,6 +212,7 @@ def get_tag():
 @image_api.route('/api/tags/create', methods=['POST'])
 def create_tag():
     data = flask.request.form
+    print(data)
     tag_meta = db.db.tags.find_one({'internal_name': db.make_internal_name(data['tag_name'])})
 
     if not data.get('tag_name'):
@@ -202,6 +223,8 @@ def create_tag():
 
     if tag_meta:
         bypass = False
+        print(tag_meta['type'])
+        print(data['type'])
         if tag_meta['name'] == data['tag_name'] and tag_meta['type'] == data['type']:
             # check if type is character and fandom is not the same
             if tag_meta['type'] == 'character':

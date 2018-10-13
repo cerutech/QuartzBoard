@@ -338,9 +338,9 @@ def get_image_tags(fileID):
 def find_source():
     if flask.request.method == 'POST':
         file = flask.request.files['file']
-        data = requests.post('https://saucenao.com/search.php?output_type=2&api_key=2cc1597b34470e3d44a1e44d86fa5997cb313a1e', data={}, files={'file': file})
+        data = requests.post('https://saucenao.com/search.php?output_type=2&api_key={}'.format(db.config.get('source_nao_key', '')), data={}, files={'file': file})
         return flask.jsonify(data.json()['results'])
 
     else:
-        data = requests.get('https://saucenao.com/search.php?output_type=2&api_key=2cc1597b34470e3d44a1e44d86fa5997cb313a1e&url=' + flask.request.args['url'])
+        data = requests.get('https://saucenao.com/search.php?output_type=2&api_key={}&url={}'.format(db.config.get('source_nao_key', ''), flask.request.args['url']))
         return flask.jsonify(data.json()['results'])

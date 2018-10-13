@@ -1,6 +1,7 @@
 {
   "create_image": true,
   "delete_image": false,
+  "edit_image": false,
   "edit_post": false,
   "create_collection": true,
   "edit_collection": false,

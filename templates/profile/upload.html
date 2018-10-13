@@ -229,6 +229,12 @@
             opacity: 1
         }
     }
+    .result {
+
+    }
+        .result:hover {
+            color: #436d9a;
+        }
 </style>
 <script>
     window.is_showing_more = false;
@@ -260,7 +266,7 @@
                 <form id="new_tag_form">
                     <div class="columns">
                         <div class="column is-1" style="width:85px;padding:0px;display:flex;justify-content:center;align-items:center;">
-                            <img src="/static/image/plus_circle2.png"/>
+                            <img src="/static/image/plus_circle2.png" />
                         </div>
                         <div class="column">
                             <h2 class="title">New Tag</h2>
@@ -314,6 +320,42 @@
         {% endraw %}
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
+    <div class="modal" v-bind:class="{'is-active': source.show_modal}">
+
+        <div class="modal-background" @click="toggleSourceModal()"></div>
+        <div class="modal-content">
+            <div class="box">
+                {% raw %}
+                <div v-if="source.is_loading" style="display:flex;align-items:center;justify-content:center;flex-flow:column;">
+                    <img src="/static/image/loader.svg" />
+                    <h1 class="title is-4">{{source.status}}</h1>
+                </div>
+                <div v-if="source.results.length">
+                    <h1 class="title is-4">Results:</h1>
+                    <p>Click on the one you would like to select</p>
+                    
+                    <article class="media" v-for="item in source.results" >
+                        <figure class="media-left" style="overflow:hidden">
+                            <p class="image is-64x64">
+                                <img v-bind:src="item.header.thumbnail">
+                            </p>
+                        </figure>
+                        <div class="media-content">
+                            <div class="content">
+                                <p>
+                                    <strong>By {{item.data.creator}}</strong> <small>{{item.header.similarity}}%</small>
+                                    <br />
+                                    <span class="result" v-for="url in item.data.ext_urls" @click="selectSource(url)" style="cursor:pointer;">{{url}}<br /></span>
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                {% endraw %}
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
     <div class="box">
         <div class="columns">
             <div class="column is-1" style="width:66px;padding:0px;display:flex;justify-content:center;align-items:center;">
@@ -358,9 +400,10 @@
                     <div class="field-body">
                         <div class="field">
                             <p class="control is-expanded">
-                                <label class="label">Source URL</label>
-                                <input class="input" name="source" type="text" placeholder="Source URL">
+                                <label class="label">Source</label>
+                                <input class="input" name="source" type="text" placeholder="Source URL" id="image_source">
                                 <span class="help"></span>
+                                <a class="button" @click="findSource()">Use SourceNao to find a source</a>
                             </p>
                         </div>
                         <div class="field">
@@ -456,6 +499,12 @@
                     image_tags: [],
                     searching_for: '',
                     show_modal: false
+                },
+                source: {
+                    show_modal: false,
+                    is_loading: true,
+                    status: 'Sending image to SourceNao',
+                    results: []
                 }
             },
             methods: {
@@ -515,7 +564,7 @@
                     if (this.tags.searching_for) {
                         this.tags.show_modal = !this.tags.show_modal
                     }
-                    
+
                 },
                 createTag() {
 
@@ -529,9 +578,33 @@
                             this.clean_up();
                             this.error = resp.data.msg;
                         }
-                        
+
                     })
-                    //
+                    // Source functins
+                },
+                findSource() {
+                    // use the current file to find the source
+                    this.source.show_modal = true;
+                    var formData = new FormData();
+                    formData.append('file', this.file.original_file);
+                    axios.post('/api/sourcenao', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        },
+                        mode: 'no-cors'
+                    }).then(resp => {
+                        this.source.status = 'Got it!'
+                        // response from SourceNao
+                        this.source.results = resp['data'];
+                        this.source.is_loading = false;
+                    })
+                },
+                selectSource(url) {
+                    $('#image_source').val(url);
+                    this.source.show_modal = false;
+                },
+                toggleSourceModal() {
+                    this.source.show_modal = false;
                 }
             }
         })

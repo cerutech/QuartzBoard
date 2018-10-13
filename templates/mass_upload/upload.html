@@ -233,17 +233,46 @@
                 });
             });
         </script>
-        <div class="field">
-            <label class="label">Collection - {{user_collections|length}} Available</label>
-            <div class="select">
-                <select name="collection">
-                    <option selected value="dont">Dont Import</option>
-                    {% for collection in user_collections %}
-                    <option value="{{collection.collectionID}}">{{collection.title}}</option>
-                    {% endfor %}
-                </select>
+        <div class="fields">
+            <div class="field">
+                <label class="label">Collection - {{user_collections|length}} Available</label>
+                <div class="select">
+                    <select name="collection">
+                        <option selected value="dont">Dont Import</option>
+                        {% for collection in user_collections %}
+                        <option value="{{collection.collectionID}}">{{collection.title}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="help">This will automaticly import into the collection.</p>
             </div>
-            <p class="help">This will automaticly import into the collection.</p>
+            <a onclick="$('#new_col').slideToggle()">Click here to create a new collection</a>
+            <div class="field" style="display:none;" id="new_col">
+                <hr />
+                <p class="help">By creating a collection, this will bring all of the images into a single "folder" where you can organise them. Depending on the mode you pick, they may not be able to be seen in the search and index pages.<br />If the mode is show, all images are shown and a little notification at the top will be shown with the image. <br />To remove an image from the collection, you must go to the edit page and then remove the image</p>
+                <br />
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" name="new_collection_confirm">
+                        Create a new collection
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="label">Title</label>
+                    <input name="new_collection_title" placeholder="Title" class="input" />
+                </div>
+                <div class="field">
+                    <label class="label">Collection Mode</label>
+                    <div class="select is-fullwidth">
+                        <select name="new_collection_mode">
+                            <option value="default" selected>"Default" Mode (Hides all pages except from the cover (first) page in any searches)</option>
+                            <option value="hidden">"Hidden" mode (Hides all pages from searches. Only readable via a direct link)</option>
+                            <option value="show">"Show" mode (All images inside the collection are visable in searches)</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="help">This will create a new collection and import the images instantly</p>
+            </div>
         </div>
         <hr />
         <label class="checkbox">

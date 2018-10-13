@@ -121,7 +121,7 @@ class Utils():
 
 class DataBase:
     def __init__(self):
-        self.__version__ = '0.6.1 (Ruby)'
+        self.__version__ = '0.6c (Ruby)'
         self.config = RecordObject(**config)
         
         self.db_connection = pymongo.MongoClient(self.config.mongoURI)
@@ -473,6 +473,7 @@ class DataBase:
         """
         to_change = to_change.lower()
         to_change = self.make_url_safe(to_change, safe=safe).lower()
+        print(to_change)
         return to_change
     
     # permissions

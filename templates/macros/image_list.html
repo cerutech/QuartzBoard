@@ -1,17 +1,19 @@
-{% macro render_quartz_list(items, small=False) %}
+{% macro render_quartz_list(items, small=False, show_images_only=False) %}
 <!-- Requires a pre-sorted list of objects that represent either an image or a collection object -->
 {% for item in items %}
 {% if item.get('fileID') %}
 <!-- Item is of type "Image" -->
 {% with collection = db.check_collections_for_image(item.fileID) %}
-
-{% if collection %}
+{% if collection and not show_images_only %}
 {% if collection.mode == 'show' %}
 <!-- Only show the image if the mode is private and it is the first item in the collection -->
 <!-- Item is apart of a collection -->
-
 <a class="smut thumbnail" href="/collection/{{collection.collectionID}}{% if collection.mode == 'show' %}?goto_page={{item.fileID}}{% endif %}" style="position:relative;">
-    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail{%if is_chrome%}?format=webp{%endif%}" />
+    <picture>
+        <source type="image/webp" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{collection.images[0]}}/thumbnail?format=webp"> <!-- Try getting the webp version first if browser is chrome -->
+        <source type="image/png" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{collection.images[0]}}/thumbnail?format=png">
+        <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{collection.images[0]}}/thumbnail?format=jpg" /> <!-- Major fail. Format as JPEG -->
+    </picture>
     <span class="tag" style="position:absolute;right:5px;top:5px;">{{collection.title}} | {{db.get_index_of_image(collection, item.fileID) + 1}}</span>
 </a>
 
@@ -20,16 +22,24 @@
 <!-- If item is not in a collection -->
 {% if item.status != 'private' %}
 <a class="smut thumbnail" href="/image/{{item.fileID}}">
-    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail{%if is_chrome%}?format=webp{%endif%}" />
+    <picture>
+        <source type="image/webp" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail?format=webp"> <!-- Try getting the webp version first if browser is chrome -->
+        <source type="image/png" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail?format=png">
+        <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.fileID}}/thumbnail?format=jpg" /> <!-- Major fail. Format as JPEG -->
+    </picture>
 </a>
 {% endif %}
 {% endif %}
 {% endwith %}
 {% endif %}
-{% if item.get('collectionID') %}
+{% if item.get('collectionID') and not show_images_only %}
 {% if item.mode not in ['hidden', 'show'] and item.images %}
 <a class="smut thumbnail" href="/collection/{{item.collectionID}}" style="position:relative">
-    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.images[0]}}/thumbnail{%if is_chrome%}?format=webp{%endif%}" />
+    <picture>
+        <source type="image/webp" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.images[0]}}/thumbnail?format=webp"> <!-- Try getting the webp version first if browser is chrome -->
+        <source type="image/png" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.images[0]}}/thumbnail?format=png">
+        <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{item.images[0]}}/thumbnail?format=jpg" /> <!-- Major fail. Format as JPEG -->
+    </picture>
     <span class="tag" style="position:absolute;right:5px;top:5px;">{{item.title}} | {{item.images|length}}</span>
 </a>
 {% endif %}

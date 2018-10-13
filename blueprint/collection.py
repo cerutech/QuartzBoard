@@ -50,7 +50,6 @@ def create_new_collection():
                           'images': [],
                           'created_at': datetime.utcnow(),
                           'uploaded_at': datetime.utcnow(), # for compat purposes
-                          'languages': [{'lang': data['language'], 'collectionID': id}],
                           'views': [],
                           'likes': [],
                           'tags': []}

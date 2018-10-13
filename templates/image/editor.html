@@ -1,11 +1,13 @@
 {% extends 'imports.html' %}
 {% block head %}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:site" content="@Quartz_" />
-<meta name="twitter:title" content="{{image_meta.title or 'Quartz Image'}}" />
-<meta name="twitter:description" content="{{db.get_tags_string(image_meta.tags)}}" />
-<meta name="twitter:image" content="/api/image/{{image_meta.fileID}}" />
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+<script src="/static/js/humanize.js"></script>
 {% endblock %}
+{% from './macros/tag_form.html' import tag_form with context %}
+{% from './macros/tag_form_modal_vue.html' import tag_form_modal with context %}
+
 {% block sidebar %}
 <div class="column is-3">
     {{search_bar()}}
@@ -44,33 +46,365 @@
     <p><b>Views: {{image_meta.views|length}}</b></p>
     <p><b>Source: {{image_meta.source or "No Source"}}</b></p>
     <p><b>Rating: {{image_utils.get_rating(image_meta.get("rating"))}}</b></p>
-    <hr />
-    {% if author.get('sidebar').content %}
-    <h1 class="subtitle">About The Author</h1>
-    <div>
-        {{md(user.get('sidebar', {}).get("content", ""), safe_mode="remove")|safe}}
-    </div>
-    {% endif %}
     {% endwith %}
 
-
-    {% if is_logged_in %}
     {% if user.role.has("delete_image") %}
     <hr />
-    <a href="/api/image/{{image_meta.fileID}}/delete">Delete image</a>
-    {% endif %}
+    <a class="button is-fullwidth" onclick="$('#adv_opt').slideToggle();">Advanced</a>
+    <br />
+    <div id="adv_opt" style="display:none;">
+        <a href="/api/image/{{image_meta.fileID}}/delete" class="button is-danger is-fullwidth">Delete Image (Cannot Be Undone)</a>
+    </div>
+    
     {% endif %}
 </div>
 {% endblock %}
 {% block content %}
-{% with author = get_user(image_meta['userID']) %}
-<div class="" style="display:flex;align-items:center;justify-content:center;width:100%;">
-    <img id="img" src="/api/image/{{image_meta.fileID}}" class="image" style="width:100%;max-width:750px;" onclick="window.location = '/api/image/{{image_meta.fileID}}'"/>
+<div id="edit_app">
+    <nav class="level">
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Views</p>
+                <p class="title">{{image_meta.views|length}}</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Favs &lt;3</p>
+                <p class="title">0</p>
+            </div>
+        </div>
+    </nav>
+    {% raw %}
+    <div class="notification is-warning" v-if="error">
+        {{error}}
+    </div>
+    <div class="modal" v-bind:class="{'is-active': tags.show_modal}">
+
+        <div class="modal-background" @click="toggleTagModal()"></div>
+        <div class="modal-content">
+            <div class="box">
+                <form id="new_tag_form">
+                    <div class="columns">
+                        <div class="column is-1" style="width:85px;padding:0px;display:flex;justify-content:center;align-items:center;">
+                            <img src="/static/image/plus_circle2.png" />
+                        </div>
+                        <div class="column">
+                            <h2 class="title">New Tag</h2>
+
+                            <h3 class="subtitle">Creating "{{tags.searching_for}}"</h3>
+                        </div>
+                    </div>
+                    <hr />
+                    <input class="tag_name" name="tag_name" hidden />
+
+                    <label class="label">Type Of Tag</label>
+                    <div class="control">
+
+                        <div class="select">
+                            <select name="type" class="type_switcher">
+                                <option value="character">Character</option>
+                                <option value="fandom">Fandom</option>
+                                <option value="kink" selected>Kink</option>
+                                <option value="author">Artist</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="help">This is to allow users to sort by type. For instance: "artist:Cerulean" or "fandom:Homesmut"<br />Other options may be avalible if you pick certain types</p>
+                    <br />
+                    <div class="type option_character is-hidden control">
+                        <label class="label">Fandom</label>
+                        <input class="input" name="fandom" placeholder="Fandom" />
+                        <p class="help">This is optional </p>
+                    </div>
+                    <div class="type option_custom is-hidden control">
+                        <label class="label">Tag Type</label>
+                        <input class="input" name="tag_type" placeholder="Type Of Tag. Misc, Meta etc. Keep it to a single word however!" />
+                        <p class="help" style="color:red;">This is required</p>
+                        <br />
+                        <label class="label">Tag Colour</label>
+                        <div class="select">
+                            <select name="tag_colour">
+                                <option value="red">Red</option>
+                                <option value="blue">Blue</option>
+                                <option value="green">Green</option>
+                                <option value="yellow">Yellow</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br />
+                    <a class="button is-success" @click="createTag()">Confirm</a>
+                </form>
+            </div>
+        </div>
+
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    {% endraw %}
+    <div class="modal" v-bind:class="{'is-active': source.show_modal}">
+
+        <div class="modal-background" @click="toggleSourceModal()"></div>
+        <div class="modal-content">
+            <div class="box">
+                {% raw %}
+                <div v-if="source.is_loading" style="display:flex;align-items:center;justify-content:center;flex-flow:column;">
+                    <img src="/static/image/loader.svg" />
+                    <h1 class="title is-4">{{source.status}}</h1>
+                </div>
+                <div v-if="source.results.length">
+                    <h1 class="title is-4">Results:</h1>
+                    <p>Click on the one you would like to select</p>
+
+                    <article class="media" v-for="item in source.results">
+                        <figure class="media-left" style="overflow:hidden">
+                            <p class="image is-64x64">
+                                <img v-bind:src="item.header.thumbnail">
+                            </p>
+                        </figure>
+                        <div class="media-content">
+                            <div class="content">
+                                <p>
+                                    <strong>By {{item.data.creator}}</strong> <small>{{item.header.similarity}}%</small>
+                                    <br />
+                                    <span class="result" v-for="url in item.data.ext_urls" @click="selectSource(url)" style="cursor:pointer;">{{url}}<br /></span>
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                {% endraw %}
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div class="box">
+        <div class="columns">
+            <div class="column is-1" style="width:66px;padding:0px;display:flex;justify-content:center;align-items:center;">
+                <img src="/static/image/!.png" />
+            </div>
+            <div class="column">
+                <h1 class="title">Edit</h1>
+                <h2 class="subtitle">Catchy subtitle here</h2>
+            </div>
+        </div>
+
+
+        <form method="post" enctype="multipart/form-data" id="new_image_form">
+            <div class="field is-centered" style="flex-flow:column;">
+                <picture style="max-width:350px;height:auto;">
+                    <source type="image/webp" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{image_meta.fileID}}?format=webp"> <!-- Try getting the webp version first if browser is chrome -->
+                    <source type="image/png" srcset="{{quartz_config.get('cdn_url', '')}}/api/image/{{image_meta.fileID}}?format=png">
+                    <img src="{{quartz_config.get('cdn_url', '')}}/api/image/{{image_meta.fileID}}/thumbnail?format=jpg" /> <!-- Major fail. Format as JPEG -->
+                </picture>
+            </div>
+            <div>
+                <div class="field is-horizontal">
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                <label class="label">Source</label>
+                                <input class="input" name="source" type="text" placeholder="Source URL" id="image_source" value="{{image_meta.source}}">
+                                <span class="help"></span>
+                                <a class="button" @click="findSource()">Use SourceNao to find a source</a>
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                <label class="label">Rating</label>
+                                <span class="select is-expanded">
+                                    <select name="rating">
+                                        <option value="e" {% if image_meta.rating == "e" %}selected{%endif%}>[E] Explicit</option>
+                                        <option value="m"{% if image_meta.rating == "m" %}selected{%endif%}>[M] Mature</option>
+                                    </select>
+                                </span>
+                                <span class="help"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    {% raw %}
+                    <div class="tags">
+                        <div class="control" v-for="tag in tags.image_tags" style="cursor:pointer;margin:0.4em;" @click="removeTag(tag)">
+                            <div class="tags has-addons">
+                                <span class="tag is-dark">{{tag.type}}</span>
+                                <span class="tag is-info" v-if="tag.type == 'fandom' || tag.colour == 'blue'">{{tag.name}}</span>
+                                <span class="tag is-danger" v-if="tag.type == 'character' || tag.colour == 'red'">{{tag.name}} <span v-if="tag.fandom_internal">{{tag.fandom_internal}})</span></span>
+                                <span class="tag is-warning" v-if="tag.type == 'kink' || tag.colour == 'yellow'">{{tag.name}}</span>
+                                <span class="tag is-success" v-if="tag.type == 'author' || tag.colour == 'green'">{{tag.name}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <label class="label">Tags</label>
+                    <div class="control" v-bind:class="{'is-loading': tags.is_loading}">
+                        <input class="input" type="text" placeholder="Tag name" v-on:keyup="onTagNameChange" id="tag_name_finder">
+                    </div>
+                    <div v-if="tags.found_tags.length > 0">
+                        <p>Found {{tags.found_tags.length}} tags<br />Please click on the tag you wish to add</p>
+                        <div class="tags">
+                            <div class="control" v-for="tag in tags.found_tags" style="cursor:pointer;margin:0.4em;" @click="addTag(tag)">
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">{{tag.type}}</span>
+                                    <span class="tag is-info" v-if="tag.type == 'fandom' || tag.colour == 'blue'">{{tag.name}}</span>
+                                    <span class="tag is-danger" v-if="tag.type == 'character' || tag.colour == 'red'">{{tag.name}} <span v-if="tag.fandom_internal">{{tag.fandom_internal}})</span></span>
+                                    <span class="tag is-warning" v-if="tag.type == 'kink' || tag.colour == 'yellow'">{{tag.name}}</span>
+                                    <span class="tag is-success" v-if="tag.type == 'author' || tag.colour == 'green'">{{tag.name}}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div v-if="tags.found_tags.length === 0" class="">
+                        <span style="color:red" v-if="tags.searching_for">No tags found with name "{{tags.searching_for}}"</span>
+
+                    </div>
+                    <br />
+                    <a @click="toggleTagModal()" v-if="tags.searching_for.length">Create a new tag with name "{{tags.searching_for}}"</a>
+                    {% endraw %}
+                    <input name="tags" id="tags_list" hidden />
+                </div>
+
+                <br /><button class="button is-success" id="submit_form">Edit</button><br />
+            </div>
+        </form>
+        <script>
+            $('#submit_form').click(function () {
+
+                $('#new_image_form').submit();
+            })
+        </script>
+    </div>
+    <script>
+        // QB V0.7 - New upload code!
+        var fileID = "{{image_meta.fileID}}"
+        var cdnUrl = '{{quartz_config.get("cdn_url") or ""}}';
+
+        var single_upload_app = new Vue({
+            el: '#edit_app',
+            data: {
+                error: null,
+                url: '',
+                fileID: fileID,
+                cdnUrl: cdnUrl,
+                tags: {
+                    is_loading: false,
+                    found_tags: [],
+                    image_tags: [],
+                    searching_for: '',
+                    show_modal: false
+                },
+                source: {
+                    show_modal: false,
+                    is_loading: true,
+                    status: 'Sending image to SourceNao',
+                    results: []
+                }
+            },
+            mounted: function () {
+                // get the current image's tags
+                this.tags.is_loading = true;
+                axios.get('/api/image/' + this.fileID + '/tags').then((resp) => {
+                    this.tags.image_tags = resp['data'];
+                    this.tags.is_loading = false;
+                    this.clean_up();
+                })
+            },
+            methods: {
+                onTagNameChange(e) {
+                    const tag_name = e.target.value
+
+                    this.tags.searching_for = tag_name
+
+                    // search the DB for that name
+                    if (tag_name.length > 1) {
+                        this.tags.is_loading = true;
+                        axios.get(`/api/tags/find?name=${tag_name}`).then(response => {
+                            this.tags.found_tags = response['data'];
+                            this.tags.is_loading = false;
+                        })
+                    }
+                    if (tag_name.length === 0) {
+                        // clear the cache of tags for now
+                        this.tags.found_tags = [];
+                    }
+                },
+                clean_up() {
+                    // clean up any left over things
+                    $('#tag_name_finder').val('');
+                    this.tags.found_tags = [];
+                    this.tags.searching_for = '';
+                    const tags = [];
+                    for (var i in this.tags.image_tags) {
+                        var tag = this.tags.image_tags[i];
+                        tags.push(tag['tagID']);
+                    }
+                    $('#tags_list').val(tags.join(','));
+                    this.tags.show_modal = false;
+                },
+                addTag(tag) {
+                    this.tags.image_tags.push(tag);
+                    this.clean_up();
+                },
+                removeTag(tag) {
+                    this.tags.image_tags.pop([this.tags.image_tags.indexOf(tag)]);
+                    this.clean_up();
+                },
+                toggleTagModal() {
+                    if (this.tags.searching_for) {
+                        this.tags.show_modal = !this.tags.show_modal
+                    }
+
+                },
+                createTag() {
+                    $('#new_tag_form').find('.tag_name').val(this.tags.searching_for);
+                    axios.post('/api/tags/create', $('#new_tag_form').serialize()).then(resp => {
+
+                        if (resp.data.success) {
+                            this.tags.image_tags.push(resp.data.tag);
+                            this.clean_up()
+                        } else {
+                            this.clean_up();
+                            this.error = resp.data.msg;
+                        }
+
+                    })
+                    // Source functins
+                },
+                getImageData(url) {
+                    return axios
+                        .get(url, {
+                            responseType: 'arraybuffer'
+                        })
+                        .then(response => new Buffer(response.data, 'binary'))
+                },
+                findSource() {
+                    // use the current file to find the source
+                    this.source.show_modal = true;
+                    if (!this.cdnUrl.lenth) {
+                        var cdn = window.location.hostname
+                        if (cdn.includes('localhost')) {
+                            var cdn = '94.10.99.101:8081'
+                        }
+                    } else {
+                        var cdn = this.cdnUrl
+                    }
+                    axios.get('/api/sourcenao?url=http://'  + cdn + '/api/image/' + this.fileID).then((resp) => {
+                        console.log(resp)
+                        this.source.status = 'Got it!'
+                        // response from SourceNao
+                        this.source.results = resp['data'];
+                        this.source.is_loading = false;
+                    })
+                },
+                selectSource(url) {
+                    $('#image_source').val(url);
+                    this.source.show_modal = false;
+                }
+            }
+        })
+    </script>
 </div>
-<hr />
-<div class="box">
-    <h1 class="subtitle">Comments</h1>
-    <p>Coming soon</p>
-</div>
-{% endwith %}
+
 {% endblock %}

@@ -67,7 +67,7 @@ def search():
 
     search_tags = flask.request.args.get('tags', 'any').split()
     rating = 'any'
-    user = 'any'
+    userID = 'any'
     fandom = 'any'
     for tag in search_tags:
         if 'rating:' in tag:
@@ -78,10 +78,11 @@ def search():
 
     results = db.search_items(tag_names=search_tags,
                                rating=rating,
-                               user=user,
+                               user=userID,
                                page_number=current_page,
                                count=True,
-                               return_dict=True)
+                               return_dict=True,
+                               page_size=40)
 
     if 'is_collection' in search_tags:
         is_collection = True
@@ -303,3 +304,43 @@ def render_tag_list():
 @image_api.route('/api/image/generate_avatar')
 def gen_ava():
     return flask.send_file(db.generate_avatar(hash=flask.request.remote_addr), mimetype='image/png')
+
+@image_api.route('/image/<fileID>/edit', methods=['GET', 'POST'])
+@auth.require(needs=['edit_image'])
+def edit_image(fileID):
+    image_meta = db.db.images.find_one({'fileID': fileID})
+    if flask.request.method == 'POST':
+        to_set = {}
+        data = flask.request.form
+        to_set['rating'] = data['rating']
+        to_set['source'] = data['source']
+        tags = set([x for x in data['tags'].split(',') if x])
+        to_set['tags'] = list(tags)
+        db.db.images.update_one({'fileID': fileID}, {'$set': to_set})
+        flask.flash('Updated image!', 'is-success')
+        return flask.redirect('/image/' + fileID + '/edit')
+    
+    return flask.render_template('image/editor.html', **locals())
+
+@image_api.route('/api/image/<fileID>/tags')
+@auth.require(needs=['edit_image'])
+def get_image_tags(fileID):
+    image_meta = db.db.images.find_one({'fileID': fileID})
+    tags = []
+    for t in image_meta['tags']:
+        t = db.get_tag(t)
+        del t['_id']
+        tags.append(t)
+
+    return flask.jsonify(tags)
+
+@image_api.route('/api/sourcenao', methods=['GET', 'POST'])
+def find_source():
+    if flask.request.method == 'POST':
+        file = flask.request.files['file']
+        data = requests.post('https://saucenao.com/search.php?output_type=2&api_key=2cc1597b34470e3d44a1e44d86fa5997cb313a1e', data={}, files={'file': file})
+        return flask.jsonify(data.json()['results'])
+
+    else:
+        data = requests.get('https://saucenao.com/search.php?output_type=2&api_key=2cc1597b34470e3d44a1e44d86fa5997cb313a1e&url=' + flask.request.args['url'])
+        return flask.jsonify(data.json()['results'])

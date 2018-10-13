@@ -124,17 +124,17 @@
     {% else %}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" rel="stylesheet" />
     {% endif %}
-
     <link href="https://use.fontawesome.com/releases/v5.0.7/css/all.css" rel="stylesheet" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.9/jquery.lazy.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.9/jquery.lazy.plugins.min.js"></script>
     <script src="/static/js/cookie_manager.js"></script>
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-tooltip@2.0.2/dist/css/bulma-tooltip.min.css" />
     {% block head %}
+    {% endblock %}
+    {% block title %}
+    <title>QuartzBoard</title>
     {% endblock %}
     {% block meta %}
     <meta name="twitter:card" content="summary_large_image" />
@@ -143,7 +143,8 @@
     <meta name="twitter:description" content="Quartz. The next generation image board" />
     <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/307615051689361408/484916791630495754/unknown.png" />
     {% endblock %}
-    <meta name="theme-color" content="#1dd2af"/>
+    <meta name="theme-color" content="#1dd2af" />
+    <meta name="description" content="A new look at image boards"/>
 </head>
 <body>
     <style>
@@ -317,7 +318,7 @@
                         Stats
                     </a>
                 </div>
-
+                
                 <div class="navbar-end">
                     <div class="navbar-item">
                         {% if is_logged_in %}

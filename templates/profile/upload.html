@@ -557,7 +557,7 @@
                     this.clean_up();
                 },
                 removeTag(tag) {
-                    this.tags.image_tags.pop([this.tags.image_tags.indexOf(tag)]);
+                    this.tags.image_tags.splice(this.tags.image_tags.indexOf(tag), 1);
                     this.clean_up();
                 },
                 toggleTagModal() {

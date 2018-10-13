@@ -241,6 +241,7 @@
                     <div class="control" v-bind:class="{'is-loading': tags.is_loading}">
                         <input class="input" type="text" placeholder="Tag name" v-on:keyup="onTagNameChange" id="tag_name_finder">
                     </div>
+                    <img class="image is-64x64" src="/static/image/loader.svg" style="margin:auto;" v-if="tags.is_loading"/>
                     <div v-if="tags.found_tags.length > 0">
                         <p>Found {{tags.found_tags.length}} tags<br />Please click on the tag you wish to add</p>
                         <div class="tags">
@@ -254,7 +255,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     <div v-if="tags.found_tags.length === 0" class="">
                         <span style="color:red" v-if="tags.searching_for">No tags found with name "{{tags.searching_for}}"</span>
@@ -348,7 +348,7 @@
                     this.clean_up();
                 },
                 removeTag(tag) {
-                    this.tags.image_tags.pop([this.tags.image_tags.indexOf(tag)]);
+                    this.tags.image_tags.splice(this.tags.image_tags.indexOf(tag), 1);
                     this.clean_up();
                 },
                 toggleTagModal() {
@@ -400,6 +400,9 @@
                 },
                 selectSource(url) {
                     $('#image_source').val(url);
+                    this.source.show_modal = false;
+                },
+                toggleSourceModal() {
                     this.source.show_modal = false;
                 }
             }

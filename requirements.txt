@@ -9,3 +9,7 @@ humanize==0.5.1
 passlib==1.7.1
 Werkzeug==0.14.1
 pagan
+gunicorn
+bs4
+feedparser
+lxml

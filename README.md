@@ -4,7 +4,7 @@ QuartzBoard
 <h4 align="center">Version 0.6 (Ruby)</h4>
 <p align="center">A new look at image boards</p>
 
-#### Warning: This project is still in alpha. There will be bugs. You have been warned.
+#### Warning: This project is still in development. There will be bugs, if you find one, please be sure to let us know asap.
 #### You can see the example server [here](https://quartzboard.org/)
 
 ## What you need
